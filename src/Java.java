@@ -6,6 +6,8 @@ public class Java
     {
         Terminal terminal = new Terminal();
 
+        terminal.scanformalware();
+
         terminal.initialize();
     }
 }
