@@ -22,19 +22,11 @@ public class Terminal
     {
         try
         {
-            Process exec = null;
-
-            exec = null;
-
-            System.out.print("Enter your admin password:");
-
-            Scanner scanner = new Scanner(System.in);
-
-            String password = scanner.next();
+            Process exec;
 
             System.out.println("Installing AntiVirus for System Scan.");
 
-            exec = Runtime.getRuntime().exec(new String[]{"x-terminal-emulator", "-e", "echo "+password+" | sudo -S apt install -y clamav clamav-daemon && systemctl stop clamav-freshclam && freshclam && systemctl start clamav-freshclam && clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
+            int return_value = Runtime.getRuntime().exec(new String[]{"bash", "-c", "./scripts/scanner.sh"}).waitFor();
 
             System.out.println("Completed AntiVirus for System Scan.");
         }
