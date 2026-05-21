@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Scanner;
 
 public class Terminal
 {
@@ -25,17 +26,15 @@ public class Terminal
 
             exec = null;
 
+            System.out.print("Enter your admin password:");
+
+            Scanner scanner = new Scanner(System.in);
+
+            String password = scanner.next();
+
             System.out.println("Installing AntiVirus for System Scan.");
 
-            exec = Runtime.getRuntime().exec(new String[]{"sudo apt update && sudo apt install -y clamav clamav-daemon"});
-
-            exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl stop clamav-freshclam"});
-
-            exec = Runtime.getRuntime().exec(new String[]{"sudo freshclam"});
-
-            exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl start clamav-freshclam"});
-
-            exec = Runtime.getRuntime().exec(new String[]{"sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
+            exec = Runtime.getRuntime().exec(new String[]{"x-terminal-emulator", "-e", "echo "+password+" | sudo apt update && sudo apt install -y clamav clamav-daemon && sudo systemctl stop clamav-freshclam && sudo freshclam && sudo systemctl start clamav-freshclam && sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
 
             System.out.println("Completed AntiVirus for System Scan.");
         }
