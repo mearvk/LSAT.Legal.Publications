@@ -25,6 +25,8 @@ public class Terminal
 
             exec = null;
 
+            System.out.println("Installing AntiVirus for System Scan.");
+
             exec = Runtime.getRuntime().exec(new String[]{"sudo apt update && sudo apt install -y clamav clamav-daemon"});
 
             exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl stop clamav-freshclam"});
@@ -34,6 +36,8 @@ public class Terminal
             exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl start clamav-freshclam"});
 
             exec = Runtime.getRuntime().exec(new String[]{"sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
+
+            System.out.println("Completed AntiVirus for System Scan.");
         }
         catch (Exception e)
         {
