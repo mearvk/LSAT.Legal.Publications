@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 public class Terminal
 {
     public String OSNAME;
@@ -13,6 +15,30 @@ public class Terminal
         String version = this.OSVERSION = System.getProperty("os.version");
 
         String arch = this.OSARCH = System.getProperty("os.arch");
+    }
+
+    public void scanformalware()
+    {
+        try
+        {
+            Process exec = null;
+
+            exec = null;
+
+            exec = Runtime.getRuntime().exec(new String[]{"sudo apt update && sudo apt install -y clamav clamav-daemon"});
+
+            exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl stop clamav-freshclam"});
+
+            exec = Runtime.getRuntime().exec(new String[]{"sudo freshclam"});
+
+            exec = Runtime.getRuntime().exec(new String[]{"sudo systemctl start clamav-freshclam"});
+
+            exec = Runtime.getRuntime().exec(new String[]{"sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace(System.err);
+        }
     }
 
     public void initialize()
