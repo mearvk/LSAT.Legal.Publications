@@ -34,7 +34,7 @@ public class Terminal
 
             System.out.println("Installing AntiVirus for System Scan.");
 
-            exec = Runtime.getRuntime().exec(new String[]{"x-terminal-emulator", "-e", "echo "+password+" | sudo apt update && sudo apt install -y clamav clamav-daemon && sudo systemctl stop clamav-freshclam && sudo freshclam && sudo systemctl start clamav-freshclam && sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
+            exec = Runtime.getRuntime().exec(new String[]{"x-terminal-emulator", "-e", "echo "+password+" | sudo apt update && sudo apt install -y clamav clamav-daemon && echo "+password+" | sudo systemctl stop clamav-freshclam && sudo freshclam && echo "+password+" | sudo systemctl start clamav-freshclam && echo "+password+" | sudo clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt"});
 
             System.out.println("Completed AntiVirus for System Scan.");
         }
