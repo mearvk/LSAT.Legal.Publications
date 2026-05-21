@@ -10,6 +10,6 @@ public class Java
 
         //
 
-        Runtime.getRuntime().exec("cmd /c start cmd.exe");
+
     }
 }
