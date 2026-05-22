@@ -1,6 +1,6 @@
 #!/bin/bash
 
-read -sp "Enter administrator password: " PASSWORD
+read -sp "Enter admin password: " PASSWORD
 
 echo -e "\n"
 
@@ -42,21 +42,32 @@ fi
 echo -e "\n"
 
 echo -e "6. Starting ClamAV on Linux System: [systemctl start clamav-freshclam]"
-if [[ "$VALUE" == *"Active: active (running)"* ]]; then
+VALUE=$(echo "$PASSWORD" | sudo -S systemctl start clamav-freshclam)
+if [[ "$VALUE" == *"clamav-freshclam.service failed"* ]]; then
   echo -e "\n"
-  echo " - ClamAV started by systemctl call.";
+  echo " - ClamAV failed to start by systemctl call.";
 fi
-echo "$PASSWORD" | sudo -S systemctl start clamav-freshclam
 echo -e "\n"
 
 echo -e "7. Checking ClamAV on Linux System: [systemctl status clamav-freshclam]"
 VALUE=$(echo "$PASSWORD" | sudo -S systemctl status clamav-freshclam)
 if [[ "$VALUE" == *"Active: active (running)"* ]]; then
   echo -e "\n"
-  echo " - ClamAV binary verified by systemctl call.";
+  echo " - ClamAV initialization verified by systemctl call.";
 fi
+
 echo -e "\n"
 
-echo -e "8. Starting Full System Scan on Linux System: [clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt]"
-echo "$PASSWORD" | sudo -S clamscan -r -i --exclude-dir=\"^/sys\" / > clamav_scan_results.legal.lsat.txt
+echo -e "8. Starting Full Virus System Scan on Linux System: [clamscan -r -i --exclude-dir=\"^/sys\" / | tee clamav_scan_results.legal.lsat.txt]"
+VALUE=$(echo "$PASSWORD" | sudo -S clamscan -r -i / | tee clamav_scan_results.legal.lsat.txt)
+
+command | while read -r VALUE; do
+if [[ "$VALUE" == *"Infected files:"* ]]; then
+  COUNT=$(echo "$VALUE" | tr -dc '0-9')
+  echo "Infected files: $COUNT"
+  echo -e "\n"
+fi
+done
+
 echo -e "\n"
+echo " - ClamAV initialization verified by systemctl call.";
