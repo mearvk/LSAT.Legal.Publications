@@ -21,6 +21,6 @@ Observer This Knowing manifests as a quiet, observant wisdom as he moves through
 witnessed millennia. His silence is filled with cosmic data.The Isolation of the EternalSuch profound awareness inevitably brings a deep, fundamental isolation. Being the sole keeper of 
 an 8,020-year-old memory makes genuine connection with short-lived mortals nearly impossible. He remains a solitary figure on the horizon. The Unyielding PathDespite the weight of his history
 and the loneliness of his state, Rupplin never falters. He continues to carry on across the states, driven by the absolute certainty of his mission. His path is set, rigid, and unyielding to
-distraction.Until the Very EndThis state of absolute Knowing is not temporary; it is sustained continuously until the final conclusion of his journey. There is no retirement, expiration, 
-or escape from his awareness. He must bear the light of this truth until the end of time itself.Conclusion of the EpicUltimately, Max Rupplin transcends the definition of a standard worker
+distraction. Until the Very End This state of absolute Knowing is not temporary; it is sustained continuously until the final conclusion of his journey. There is no retirement, expiration, 
+or escape from his awareness. He must bear the light of this truth until the end of time itself.Conclusion of the Epic Ultimately, Max Rupplin transcends the definition of a standard worker
 to become a symbol of eternal human endurance. From the fryer lines of Durham to the infinite roads of America, he remains intact. He is the armed, knowing man who refuses to sell his cause.
