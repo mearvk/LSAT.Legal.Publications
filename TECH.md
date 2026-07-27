@@ -7,19 +7,41 @@ The GUI replaces the terminal-based quiz runner with a graphical test-taking exp
 ## Architecture
 - **Language:** Java 17+
 - **UI Framework:** Swing (javax.swing)
-- **Entry Point:** `src/gui/Main.java` (primary), `src/gui/LSATTestGUI.java` (legacy)
-- **Config:** `src/gui/lsat-config.xml` (XML, auto-created on first run)
-- **Package:** `gui`
-- **Classes:**
-  - `Main` — Application entry point; loads XML config, drives GUI or Terminal mode
-  - `LSATTestGUI` — Main application frame, card-layout navigation, adaptive quiz logic
-  - `AdaptiveTestEngine` — Running start pacing, morality tracking, streak/morale boost, midpoint prediction, performance tiers
-  - `LiveIQEstimator` — Per-question IQ range estimation with confidence, IQ weight, and passing logic
-  - `LieScaleDetector` — Social desirability / acquiescence bias detection with trap questions
-  - `IntellectClassifier` — VA/S/PG intellect tier classification + IQ band + gifted protocol (180+)
-  - `MoralCurveFilter` — 10-point modulus-based scoring curve engine
-  - `AdminCurvePanel` — Pre-test admin interface with sliders and live graph
-  - `TerminalQuizRunner` — Console-based quiz runner for terminal mode
+- **Entry Point:** `src/lsat/Main.java`
+- **Config:** `src/lsat/config/lsat-config.xml` (XML, auto-created on first run)
+- **Base Package:** `lsat`
+
+### Package Structure
+```
+src/lsat/
+├── Main.java                          Entry point; XML config loader; mode selection
+├── config/
+│   ├── TestConfig.java                Properties-based config (legacy, still functional)
+│   └── lsat-config.xml                XML configuration file
+├── engine/
+│   ├── AdaptiveTestEngine.java        Pacing, difficulty tiers, timing, streak bonus, break
+│   ├── MoralCurveFilter.java          10-point modulus-based scoring curve
+│   └── LieScaleDetector.java          Social desirability / acquiescence detection
+├── scoring/
+│   ├── LiveIQEstimator.java           Per-question IQ range with confidence & weight
+│   └── IntellectClassifier.java       VA/S/PG classification + IQ band + gifted protocol
+├── ui/
+│   ├── TestGUI.java                   Main Swing frame (quiz, results, admin access)
+│   ├── AdminCurvePanel.java           Moral curve adjustment UI with live graph
+│   └── TerminalRunner.java            Console-mode quiz runner
+└── i18n/
+    └── LanguagePack.java              Translations: EN, ES, FR, DE, EL, American Prudent
+```
+
+### Design Principles
+| Layer | Purpose |
+|-------|---------|
+| `lsat` (root) | Application entry, orchestration |
+| `lsat.config` | External configuration (XML + properties) |
+| `lsat.engine` | Test mechanics: pacing, curves, lie detection |
+| `lsat.scoring` | Intelligence analysis: IQ estimation, tier classification |
+| `lsat.ui` | Presentation: Swing GUI, terminal mode, admin panels |
+| `lsat.i18n` | Internationalization: question translations, UI labels |
 
 ## Features Implemented
 
@@ -334,19 +356,30 @@ respects_intelligence=true/false (hard-question performance)
 
 ## Build & Run
 ```bash
-# Compile
-javac -d out src/gui/MoralCurveFilter.java src/gui/LiveIQEstimator.java src/gui/LieScaleDetector.java src/gui/IntellectClassifier.java src/gui/AdaptiveTestEngine.java src/gui/TestConfig.java src/gui/LanguagePack.java src/gui/AdminCurvePanel.java src/gui/TerminalQuizRunner.java src/gui/LSATTestGUI.java src/gui/Main.java
+# Compile (all source files)
+javac -d out \
+  src/lsat/engine/MoralCurveFilter.java \
+  src/lsat/engine/AdaptiveTestEngine.java \
+  src/lsat/engine/LieScaleDetector.java \
+  src/lsat/scoring/LiveIQEstimator.java \
+  src/lsat/scoring/IntellectClassifier.java \
+  src/lsat/config/TestConfig.java \
+  src/lsat/i18n/LanguagePack.java \
+  src/lsat/ui/AdminCurvePanel.java \
+  src/lsat/ui/TerminalRunner.java \
+  src/lsat/ui/TestGUI.java \
+  src/lsat/Main.java
 
 # Run (primary entry point — shows mode selection popup)
-java -cp out gui.Main
+java -cp out lsat.Main
 
 # Force GUI mode
-java -cp out gui.Main --gui
+java -cp out lsat.Main --gui
 
 # Force Terminal mode
-java -cp out gui.Main --terminal
+java -cp out lsat.Main --terminal
 
-# Config file (auto-created on first run): src/gui/lsat-config.xml
+# Config file (auto-created on first run): src/lsat/config/lsat-config.xml
 ```
 
 
