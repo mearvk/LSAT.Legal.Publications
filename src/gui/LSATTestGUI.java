@@ -1089,37 +1089,11 @@ public class LSATTestGUI extends JFrame {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Main
+    // Main (legacy — use gui.Main as primary entry point)
     // ─────────────────────────────────────────────────────────────────────────
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            String[] options = {"GUI (Default)", "Terminal"};
-            int choice = JOptionPane.showOptionDialog(
-                    null,
-                    "How would you like to administer the test?",
-                    "LSAT Moral Assessment — Mode Selection",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[0]
-            );
-
-            if (choice == 1) {
-                new Thread(() -> {
-                    TerminalQuizRunner.run();
-                    System.exit(0);
-                }).start();
-            } else {
-                LSATTestGUI gui = new LSATTestGUI();
-                gui.setVisible(true);
-            }
-        });
+        // Delegate to Main class
+        Main.main(args);
     }
 }

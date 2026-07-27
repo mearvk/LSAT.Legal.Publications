@@ -7,9 +7,11 @@ The GUI replaces the terminal-based quiz runner with a graphical test-taking exp
 ## Architecture
 - **Language:** Java 17+
 - **UI Framework:** Swing (javax.swing)
-- **Entry Point:** `src/gui/LSATTestGUI.java`
+- **Entry Point:** `src/gui/Main.java` (primary), `src/gui/LSATTestGUI.java` (legacy)
+- **Config:** `src/gui/lsat-config.xml` (XML, auto-created on first run)
 - **Package:** `gui`
 - **Classes:**
+  - `Main` — Application entry point; loads XML config, drives GUI or Terminal mode
   - `LSATTestGUI` — Main application frame, card-layout navigation, adaptive quiz logic
   - `AdaptiveTestEngine` — Running start pacing, morality tracking, streak/morale boost, midpoint prediction, performance tiers
   - `LiveIQEstimator` — Per-question IQ range estimation with confidence, IQ weight, and passing logic
@@ -333,12 +335,18 @@ respects_intelligence=true/false (hard-question performance)
 ## Build & Run
 ```bash
 # Compile
-javac -d out src/gui/MoralCurveFilter.java src/gui/LiveIQEstimator.java src/gui/LieScaleDetector.java src/gui/IntellectClassifier.java src/gui/AdaptiveTestEngine.java src/gui/TestConfig.java src/gui/LanguagePack.java src/gui/AdminCurvePanel.java src/gui/TerminalQuizRunner.java src/gui/LSATTestGUI.java
+javac -d out src/gui/MoralCurveFilter.java src/gui/LiveIQEstimator.java src/gui/LieScaleDetector.java src/gui/IntellectClassifier.java src/gui/AdaptiveTestEngine.java src/gui/TestConfig.java src/gui/LanguagePack.java src/gui/AdminCurvePanel.java src/gui/TerminalQuizRunner.java src/gui/LSATTestGUI.java src/gui/Main.java
 
-# Run (shows mode selection popup first)
-java -cp out gui.LSATTestGUI
+# Run (primary entry point — shows mode selection popup)
+java -cp out gui.Main
 
-# To change language/difficulty/font, edit: src/gui/config.properties
+# Force GUI mode
+java -cp out gui.Main --gui
+
+# Force Terminal mode
+java -cp out gui.Main --terminal
+
+# Config file (auto-created on first run): src/gui/lsat-config.xml
 ```
 
 
