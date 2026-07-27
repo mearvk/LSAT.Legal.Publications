@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LSAT Moral Assessment — Application Configuration
+  Edit this file to customize the test experience.
+-->
+<lsat-config>
+
+    <!-- Font settings for question display -->
+    <font>
+        <family>SansSerif</family>
+        <size>20</size>
+        <!-- Hex (#RRGGBB) or named: white, black, green, gold, cyan, silver -->
+        <color>#FFFFFF</color>
+    </font>
+
+    <!-- Test behavior settings -->
+    <test>
+        <!-- easy, moderate, standard, hard, expert -->
+        <difficulty>standard</difficulty>
+        <!-- english, spanish, french, american_prudent, german, greek -->
+        <language>english</language>
+        <!-- Enable lie-scale trap questions (true/false) -->
+        <lie-scale-enabled>true</lie-scale-enabled>
+        <!-- Enable adaptive pacing / running start (true/false) -->
+        <adaptive-pacing>true</adaptive-pacing>
+        <!-- Enable streak bonus time (true/false) -->
+        <streak-bonus>true</streak-bonus>
+        <!-- Enable 2-minute break after 45 questions (true/false) -->
+        <break-enabled>true</break-enabled>
+    </test>
+
+    <!-- Timing configuration -->
+    <timing>
+        <!-- Base seconds per question (21-24 for standard) -->
+        <base-seconds>21</base-seconds>
+        <!-- Maximum seconds per question -->
+        <max-seconds>24</max-seconds>
+        <!-- Break duration in seconds -->
+        <break-duration-seconds>120</break-duration-seconds>
+    </timing>
+
+    <!-- IQ estimation parameters -->
+    <iq>
+        <!-- Minimum IQ floor assumption -->
+        <floor>115</floor>
+        <!-- Mean IQ assumption for test population -->
+        <mean>140</mean>
+        <!-- Passing IQ threshold -->
+        <passing-threshold>125</passing-threshold>
+        <!-- IQ weight in overall score (0.30-0.50) -->
+        <weight-percent>0.40</weight-percent>
+    </iq>
+
+    <!-- Display/UI settings -->
+    <display>
+        <window-width>950</window-width>
+        <window-height>700</window-height>
+        <!-- Show live IQ estimator during test -->
+        <show-live-iq>true</show-live-iq>
+        <!-- Show lie scale indicator during test -->
+        <show-lie-scale>true</show-lie-scale>
+        <!-- Show intellect tier (VA/S/PG) during test -->
+        <show-intellect-tier>true</show-intellect-tier>
+    </display>
+
+</lsat-config>
