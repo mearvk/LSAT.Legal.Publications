@@ -43,6 +43,9 @@ public class LSATTestGUI extends JFrame {
     // Live IQ estimator (updates every question)
     private LiveIQEstimator liveIQ;
 
+    // Lie scale detector (social desirability / acquiescence bias)
+    private LieScaleDetector lieDetector;
+
     // All questions flattened + ordered by difficulty for running start
     private String[] orderedQuestions;
     private int currentQuestionIndex;
@@ -609,10 +612,20 @@ public class LSATTestGUI extends JFrame {
         Collections.addAll(pool, langPack.getHardQuestions());
         Collections.addAll(pool, langPack.getExpertQuestions());
 
+        // Insert lie-scale questions at designated positions
+        // These replace the question at that index with a lie-scale trap question
+        for (int i = 0; i < LieScaleDetector.LIE_QUESTION_POSITIONS.length; i++) {
+            int pos = LieScaleDetector.LIE_QUESTION_POSITIONS[i];
+            if (pos < pool.size() && i < LieScaleDetector.LIE_QUESTIONS_EN.length) {
+                pool.set(pos, LieScaleDetector.LIE_QUESTIONS_EN[i]);
+            }
+        }
+
         orderedQuestions = pool.toArray(new String[0]);
         int total = orderedQuestions.length;
 
         engine = new AdaptiveTestEngine(total, curveFilter);
+        lieDetector = new LieScaleDetector(total);
 
         // Apply difficulty settings from config
         engine.setBaseTimeSec(config.getBaseTimeForDifficulty());
@@ -718,17 +731,28 @@ public class LSATTestGUI extends JFrame {
         // Record in adaptive engine
         double boost = engine.recordAnswer(currentQuestionIndex, yes);
 
+        // Record in lie-scale detector
+        lieDetector.recordAnswer(currentQuestionIndex, yes);
+
         // Record in live IQ estimator (updates after EVERY question)
         Boolean prevAnswer = currentQuestionIndex > 0 ? answers[currentQuestionIndex - 1] : null;
         int tier = engine.getDifficultyTier(currentQuestionIndex);
         liveIQ.recordAnswer(yes, tier, prevAnswer);
 
-        // Update IQ display
-        lblLiveIQ.setText(liveIQ.getDisplayString());
-        lblWeighted.setText(liveIQ.getWeightedDisplay());
+        // Update IQ display (with lie-scale penalty applied)
+        int iqPenalty = lieDetector.getIQPenalty();
+        int adjustedMid = liveIQ.getIQMidpoint() + iqPenalty;
+        if (iqPenalty < 0) {
+            lblLiveIQ.setText(String.format("%s [%d lie adj]", liveIQ.getDisplayString(), iqPenalty));
+        } else {
+            lblLiveIQ.setText(liveIQ.getDisplayString());
+        }
+        lblWeighted.setText(String.format("%s | %s", liveIQ.getWeightedDisplay(), lieDetector.getShortDisplay()));
 
-        // Color the IQ label based on passing status
-        if (liveIQ.isPassing()) {
+        // Color the IQ label based on passing status and lie reliability
+        if (lieDetector.isUnreliable()) {
+            lblLiveIQ.setForeground(new Color(255, 80, 80)); // red — unreliable
+        } else if (liveIQ.isPassing()) {
             int mid = liveIQ.getIQMidpoint();
             if (mid >= 160) {
                 lblLiveIQ.setForeground(new Color(255, 215, 0));   // gold for strong
@@ -934,10 +958,11 @@ public class LSATTestGUI extends JFrame {
         lblResultCurved.setText(String.format("Curved: %.1f%% (%.1f / %.1f weighted)",
                 curvedPct, curvedScore, maxCurved));
 
-        lblResultMorale.setText(String.format("Morale: %.1f  |  %s  |  %s",
+        lblResultMorale.setText(String.format("Morale: %.1f  |  %s  |  %s  |  %s",
                 engine.getTotalMorale(),
                 liveIQ.getPassDisplay(),
-                liveIQ.getWeightedDisplay()));
+                liveIQ.getWeightedDisplay(),
+                lieDetector.getShortDisplay()));
 
         // Performance tier
         AdaptiveTestEngine.PerformanceTier tier = engine.getPerformanceTier();
@@ -1004,8 +1029,9 @@ public class LSATTestGUI extends JFrame {
         lblResultIntellect.setText(iqDisplay);
         lblResultIntellect.setForeground(intellectColor);
 
-        // Show reasoning in the text area
-        txtResultReasoning.setText(classifier.getReasoning());
+        // Show reasoning in the text area (intellect + lie scale analysis)
+        String fullReasoning = classifier.getReasoning() + "\n" + lieDetector.getReasoning();
+        txtResultReasoning.setText(fullReasoning);
 
         saveScore();
         cardLayout.show(cardPanel, CARD_RESULTS);
@@ -1025,6 +1051,12 @@ public class LSATTestGUI extends JFrame {
         content.append(String.format("─────────────────────────────────%n"));
         if (liveIQ != null) {
             content.append(liveIQ.toFileString());
+            content.append(String.format("─────────────────────────────────%n"));
+        }
+        if (lieDetector != null) {
+            content.append(lieDetector.toFileString());
+            content.append(String.format("─────────────────────────────────%n"));
+            content.append(lieDetector.getReasoning());
             content.append(String.format("─────────────────────────────────%n"));
         }
         if (classifier != null) {

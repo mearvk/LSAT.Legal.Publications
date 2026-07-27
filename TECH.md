@@ -13,6 +13,7 @@ The GUI replaces the terminal-based quiz runner with a graphical test-taking exp
   - `LSATTestGUI` — Main application frame, card-layout navigation, adaptive quiz logic
   - `AdaptiveTestEngine` — Running start pacing, morality tracking, streak/morale boost, midpoint prediction, performance tiers
   - `LiveIQEstimator` — Per-question IQ range estimation with confidence, IQ weight, and passing logic
+  - `LieScaleDetector` — Social desirability / acquiescence bias detection with trap questions
   - `IntellectClassifier` — VA/S/PG intellect tier classification + IQ band + gifted protocol (180+)
   - `MoralCurveFilter` — 10-point modulus-based scoring curve engine
   - `AdminCurvePanel` — Pre-test admin interface with sliders and live graph
@@ -300,10 +301,39 @@ respects_intelligence=true/false (hard-question performance)
 - [x] **Config auto-creates** default file on first run if missing
 - [x] **Font settings apply** to question text area in quiz panel
 
+### v1.0 — Lie Scale Detection (Social Desirability / Acquiescence Bias)
+- [x] **LieScaleDetector** — ~15–20% of questions (12 of 76) are lie-scale traps:
+  - Questions where YES *sounds* virtuous but NO is the honest, mature answer
+  - A thoughtful person — who has isolated the idea by age, maturity, IQ, social training, and research — would answer NO
+  - Answering YES = "going along" / acquiescence / social desirability bias
+- [x] **Trap Question Design Principles:**
+  - Questions use absolutes ("always", "never", "every", "completely")
+  - They describe behavior that sounds good but is humanly impossible
+  - A mature person has ALREADY resolved why the answer is NO:
+    - "Have you never in your entire life told even the smallest untruth?" (NO — everyone has)
+    - "Are you completely free of all prejudice and bias?" (NO — implicit bias is universal)
+    - "Do you always put every other person's needs before your own without exception?" (NO — unsustainable)
+    - "Do you never experience even a moment of envy?" (NO — documented human universal)
+- [x] **Lie Scale Scoring:**
+  | Lie % | Classification | IQ Penalty | Range Widening |
+  |-------|---------------|-----------|----------------|
+  | 0–15% | Highly Authentic | 0 | 0 |
+  | 15–30% | Mostly Authentic | -3 | +2 |
+  | 30–50% | Moderate Concern | -7 | +5 |
+  | 50–70% | Significant Concern | -12 | +8 |
+  | 70%+ | UNRELIABLE | -15 | +10 |
+- [x] **Impact on Results:**
+  - IQ estimate reduced by penalty (high lie = lower credited IQ)
+  - Confidence range widened (less certain about true ability)
+  - Extreme lie score (70%+) flags entire test as UNRELIABLE
+- [x] **Live Display:** Lie scale shown in weighted score area, updates after each trap question
+- [x] **Results Panel:** Full lie-scale reasoning included in grader interpretation
+- [x] **Score File:** All lie metrics saved (hits, total, percent, reliability, penalty)
+
 ## Build & Run
 ```bash
 # Compile
-javac -d out src/gui/MoralCurveFilter.java src/gui/LiveIQEstimator.java src/gui/IntellectClassifier.java src/gui/AdaptiveTestEngine.java src/gui/TestConfig.java src/gui/LanguagePack.java src/gui/AdminCurvePanel.java src/gui/TerminalQuizRunner.java src/gui/LSATTestGUI.java
+javac -d out src/gui/MoralCurveFilter.java src/gui/LiveIQEstimator.java src/gui/LieScaleDetector.java src/gui/IntellectClassifier.java src/gui/AdaptiveTestEngine.java src/gui/TestConfig.java src/gui/LanguagePack.java src/gui/AdminCurvePanel.java src/gui/TerminalQuizRunner.java src/gui/LSATTestGUI.java
 
 # Run (shows mode selection popup first)
 java -cp out gui.LSATTestGUI
