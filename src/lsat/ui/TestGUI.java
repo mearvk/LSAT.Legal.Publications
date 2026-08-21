@@ -415,34 +415,65 @@ public class TestGUI extends JFrame {
     // ─────────────────────────────────────────────────────────────────────────
 
     private JPanel createCustomTitleBar() {
+        // Standard JFrame gray title bar color
+        Color titleBarColor = new Color(UIManager.getColor("Panel.background") != null
+                ? UIManager.getColor("Panel.background").getRGB() : 0xF0F0F0);
+
         JPanel titleBar = new JPanel(new BorderLayout());
-        titleBar.setBackground(COLOR_PRIMARY_GREEN);
-        titleBar.setPreferredSize(new Dimension(getWidth(), 32));
+        titleBar.setBackground(titleBarColor);
+        titleBar.setPreferredSize(new Dimension(getWidth(), 30));
+        titleBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(180, 180, 180)));
 
-        // Title text
+        // Title text (dark, like native window title)
         JLabel titleLabel = new JLabel("  LSAT Moral Assessment — Adaptive Test");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        titleLabel.setForeground(COLOR_TEXT_DARK);
 
-        // Window control buttons
+        // Window control buttons — styled to mimic native OS buttons
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         controls.setOpaque(false);
 
-        JButton btnMinimize = new JButton("─");
-        JButton btnMaximize = new JButton("□");
+        JButton btnMinimize = new JButton("—");
+        JButton btnMaximize = new JButton("☐");
         JButton btnClose = new JButton("✕");
 
         for (JButton b : new JButton[]{btnMinimize, btnMaximize, btnClose}) {
-            b.setFont(new Font("SansSerif", Font.BOLD, 13));
-            b.setForeground(Color.WHITE);
-            b.setBackground(COLOR_PRIMARY_GREEN);
+            b.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 12));
+            b.setForeground(new Color(60, 60, 60));
+            b.setBackground(titleBarColor);
             b.setBorderPainted(false);
             b.setFocusPainted(false);
+            b.setContentAreaFilled(true);
             b.setOpaque(true);
-            b.setPreferredSize(new Dimension(40, 32));
+            b.setPreferredSize(new Dimension(46, 30));
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            // Hover effect
+            final Color hoverBg = new Color(220, 220, 220);
+            final Color normalBg = titleBarColor;
+            b.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    b.setBackground(hoverBg);
+                }
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    b.setBackground(normalBg);
+                }
+            });
         }
-        btnClose.setBackground(new Color(200, 60, 60));
+        // Close button has red hover like native Windows
+        btnClose.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnClose.setBackground(new Color(232, 17, 35));
+                btnClose.setForeground(Color.WHITE);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnClose.setBackground(titleBarColor);
+                btnClose.setForeground(new Color(60, 60, 60));
+            }
+        });
 
         btnMinimize.addActionListener(e -> setExtendedState(JFrame.ICONIFIED));
         btnMaximize.addActionListener(e -> {
