@@ -82,6 +82,9 @@ public class TestGUI extends JFrame {
     private Timer questionTimer;
     private int timeRemaining;
 
+    // Break countdown menu item (unclickable)
+    private JMenu breakCountdownMenu;
+
     // Intellect classifier (computed live and at end)
     private IntellectClassifier classifier;
 
@@ -306,11 +309,39 @@ public class TestGUI extends JFrame {
         setLocationRelativeTo(null);
         setMinimumSize(new Dimension(750, 550));
 
+        // Set application icon for taskbar/dock
+        try {
+            Image iconImage = javax.imageio.ImageIO.read(new File("images/logo-orb.png"));
+            if (iconImage != null) {
+                setIconImage(iconImage);
+            }
+        } catch (IOException ignored) { }
+
         curveFilter = new MoralCurveFilter();
 
         // Load external config and language pack
         config = new TestConfig();
         langPack = LanguagePack.load(config.getLanguage());
+
+        // Apply curve weights from config if available
+        double[] configWeights = config.parseCurveWeights();
+        if (configWeights != null) {
+            for (int i = 0; i < configWeights.length; i++) {
+                curveFilter.setWeight(i, configWeights[i]);
+            }
+        }
+
+        // Undecorated for real shape support + custom title bar
+        setUndecorated(true);
+
+        // Apply rounded bottom corners via setShape
+        applyFrameCornerShape();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                applyFrameCornerShape();
+            }
+        });
 
         // ─── Menu Bar: Mayors & Sheriffs ─────────────────────────────────────
         setJMenuBar(createMenuBar());
@@ -326,16 +357,31 @@ public class TestGUI extends JFrame {
         cardPanel.add(createQuizPanel(), CARD_QUIZ);
         cardPanel.add(createResultsPanel(), CARD_RESULTS);
 
-        // ─── Persistent branding header: upper-left "LSAT Legal Publications" ───
-        JPanel brandingHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        // ─── Custom title bar ───────────────────────────────────────────────
+        JPanel titleBar = createCustomTitleBar();
+
+        // ─── Persistent branding header: "LSAT Legal Publications" left, "Adaptive Moral Assessment" right ───
+        JPanel brandingHeader = new JPanel(new BorderLayout());
         brandingHeader.setBackground(COLOR_WHITE);
+        brandingHeader.setBorder(new EmptyBorder(10, 20, 10, 20));
         JLabel brandingLabel = new JLabel("LSAT Legal Publications");
         brandingLabel.setFont(BRANDING_FONT);
         brandingLabel.setForeground(COLOR_PRIMARY_GREEN);
-        brandingHeader.add(brandingLabel);
+
+        lblQuizTitle = new JLabel("Adaptive Moral Assessment");
+        lblQuizTitle.setFont(headingFont(18f));
+        lblQuizTitle.setForeground(COLOR_PRIMARY_GREEN);
+
+        brandingHeader.add(brandingLabel, BorderLayout.WEST);
+        brandingHeader.add(lblQuizTitle, BorderLayout.EAST);
+
+        // Top section: title bar + branding
+        JPanel topSection = new JPanel(new BorderLayout());
+        topSection.add(titleBar, BorderLayout.NORTH);
+        topSection.add(brandingHeader, BorderLayout.SOUTH);
 
         setLayout(new BorderLayout());
-        add(brandingHeader, BorderLayout.NORTH);
+        add(topSection, BorderLayout.NORTH);
         add(cardPanel, BorderLayout.CENTER);
         cardLayout.show(cardPanel, CARD_WELCOME);
 
@@ -365,19 +411,214 @@ public class TestGUI extends JFrame {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Custom Title Bar (for undecorated frame with rounded corners)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private JPanel createCustomTitleBar() {
+        JPanel titleBar = new JPanel(new BorderLayout());
+        titleBar.setBackground(COLOR_PRIMARY_GREEN);
+        titleBar.setPreferredSize(new Dimension(getWidth(), 32));
+
+        // Title text
+        JLabel titleLabel = new JLabel("  LSAT Moral Assessment — Adaptive Test");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        titleLabel.setForeground(Color.WHITE);
+
+        // Window control buttons
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        controls.setOpaque(false);
+
+        JButton btnMinimize = new JButton("─");
+        JButton btnMaximize = new JButton("□");
+        JButton btnClose = new JButton("✕");
+
+        for (JButton b : new JButton[]{btnMinimize, btnMaximize, btnClose}) {
+            b.setFont(new Font("SansSerif", Font.BOLD, 13));
+            b.setForeground(Color.WHITE);
+            b.setBackground(COLOR_PRIMARY_GREEN);
+            b.setBorderPainted(false);
+            b.setFocusPainted(false);
+            b.setOpaque(true);
+            b.setPreferredSize(new Dimension(40, 32));
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        }
+        btnClose.setBackground(new Color(200, 60, 60));
+
+        btnMinimize.addActionListener(e -> setExtendedState(JFrame.ICONIFIED));
+        btnMaximize.addActionListener(e -> {
+            if (getExtendedState() != JFrame.MAXIMIZED_BOTH) {
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+            } else {
+                setExtendedState(JFrame.NORMAL);
+            }
+        });
+        btnClose.addActionListener(e -> {
+            dispose();
+            System.exit(0);
+        });
+
+        controls.add(btnMinimize);
+        controls.add(btnMaximize);
+        controls.add(btnClose);
+
+        titleBar.add(titleLabel, BorderLayout.CENTER);
+        titleBar.add(controls, BorderLayout.EAST);
+
+        // Drag support for moving the window
+        final int[] dragOffset = new int[2];
+        titleBar.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                dragOffset[0] = e.getX();
+                dragOffset[1] = e.getY();
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    String action = config.getTitlebarDoubleclick();
+                    if ("pause".equals(action)) {
+                        if (questionTimer != null && questionTimer.isRunning()) {
+                            questionTimer.stop();
+                            btnYes.setEnabled(false);
+                            btnNo.setEnabled(false);
+                            titleLabel.setText("  LSAT Moral Assessment — PAUSED");
+                        } else if (questionTimer != null) {
+                            questionTimer.start();
+                            btnYes.setEnabled(true);
+                            btnNo.setEnabled(true);
+                            titleLabel.setText("  LSAT Moral Assessment — Adaptive Test");
+                        }
+                    } else {
+                        int choice = javax.swing.JOptionPane.showConfirmDialog(
+                            TestGUI.this,
+                            "Return to the start screen? Current progress will be lost.",
+                            "Go Back",
+                            javax.swing.JOptionPane.YES_NO_OPTION,
+                            javax.swing.JOptionPane.QUESTION_MESSAGE
+                        );
+                        if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                            if (questionTimer != null) questionTimer.stop();
+                            cardLayout.show(cardPanel, CARD_WELCOME);
+                            titleLabel.setText("  LSAT Moral Assessment — Adaptive Test");
+                        }
+                    }
+                } else if (e.getClickCount() == 3) {
+                    if (getExtendedState() != JFrame.MAXIMIZED_BOTH) {
+                        setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    } else {
+                        setExtendedState(JFrame.NORMAL);
+                    }
+                }
+            }
+        });
+        titleBar.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                setLocation(e.getXOnScreen() - dragOffset[0], e.getYOnScreen() - dragOffset[1]);
+            }
+        });
+
+        return titleBar;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Menu Bar — Mayors & Sheriffs
     // ─────────────────────────────────────────────────────────────────────────
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
-        JMenu oneMenu = new JMenu("One");
+        JMenu oneMenu = new JMenu("Ω");
         JMenuItem voteItem = new JMenuItem("Vote");
         oneMenu.add(voteItem);
 
         menuBar.add(oneMenu);
 
+        // Break countdown display — unclickable menu item
+        breakCountdownMenu = new JMenu("☕ Break (2 min)") {
+            @Override
+            protected void processMouseEvent(java.awt.event.MouseEvent e) {
+                // Consume all mouse events to make it unclickable
+            }
+        };
+        breakCountdownMenu.setEnabled(false);
+        breakCountdownMenu.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        breakCountdownMenu.setForeground(COLOR_MID_GREY);
+
+        // 𓈌 clickable symbol — shows definition then fades after 5 seconds
+        JMenu symbolMenu = new JMenu("𓈌");
+        symbolMenu.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        symbolMenu.setForeground(COLOR_PRIMARY_GREEN);
+        symbolMenu.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                showSymbolDefinition();
+            }
+        });
+
+        menuBar.add(Box.createHorizontalGlue());
+        menuBar.add(symbolMenu);
+        menuBar.add(breakCountdownMenu);
+
         return menuBar;
+    }
+
+    private void showSymbolDefinition() {
+        String definition = config.getSymbolDefinition();
+
+        // Create a floating label overlay
+        JLabel defLabel = new JLabel(definition);
+        defLabel.setFont(new Font("SansSerif", Font.ITALIC, 13));
+        defLabel.setForeground(COLOR_PRIMARY_GREEN);
+        defLabel.setOpaque(true);
+        defLabel.setBackground(new Color(255, 255, 255, 240));
+        defLabel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(COLOR_PRIMARY_GREEN, 1),
+            javax.swing.BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
+
+        // Add to the glass pane for overlay display
+        JPanel glass = (JPanel) getGlassPane();
+        glass.setLayout(null);
+        glass.setOpaque(false);
+        glass.setVisible(true);
+
+        Dimension pref = defLabel.getPreferredSize();
+        int x = (getWidth() - pref.width) / 2;
+        int y = 40;
+        defLabel.setBounds(x, y, pref.width, pref.height);
+        glass.add(defLabel);
+        glass.repaint();
+
+        // Fade out after 5 seconds
+        Timer fadeTimer = new Timer(50, null);
+        final int[] elapsed = {0};
+        final int fadeStart = 5000; // start fading at 5s
+        final int fadeDuration = 1000; // fade over 1s
+
+        fadeTimer.addActionListener(ev -> {
+            elapsed[0] += 50;
+            if (elapsed[0] >= fadeStart) {
+                int fadeElapsed = elapsed[0] - fadeStart;
+                float alpha = 1.0f - (float) fadeElapsed / fadeDuration;
+                if (alpha <= 0) {
+                    fadeTimer.stop();
+                    glass.remove(defLabel);
+                    glass.setVisible(false);
+                    glass.repaint();
+                } else {
+                    defLabel.setForeground(new Color(
+                        COLOR_PRIMARY_GREEN.getRed(),
+                        COLOR_PRIMARY_GREEN.getGreen(),
+                        COLOR_PRIMARY_GREEN.getBlue(),
+                        (int)(alpha * 255)));
+                    defLabel.setBackground(new Color(255, 255, 255, (int)(alpha * 240)));
+                    defLabel.repaint();
+                }
+            }
+        });
+        fadeTimer.start();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -481,7 +722,24 @@ public class TestGUI extends JFrame {
     // ─────────────────────────────────────────────────────────────────────────
 
     private JPanel createQuizPanel() {
-        quizPanel = new JPanel(new BorderLayout());
+        quizPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Modest diagonal hatch: light gray lines on white background
+                g2.setColor(new Color(220, 220, 220, 80));
+                g2.setStroke(new BasicStroke(1));
+                int spacing = 20;
+                int w = getWidth();
+                int h = getHeight();
+                for (int i = -h; i < w + h; i += spacing) {
+                    g2.drawLine(i, 0, i + h, h);
+                }
+                g2.dispose();
+            }
+        };
         quizPanel.setName(CARD_QUIZ);
         quizPanel.setBackground(COLOR_WHITE);
         quizPanel.setBorder(new EmptyBorder(5, 40, 20, 10));
@@ -495,15 +753,10 @@ public class TestGUI extends JFrame {
         topLeft.setLayout(new BoxLayout(topLeft, BoxLayout.Y_AXIS));
         topLeft.setOpaque(false);
 
-        lblQuizTitle = new JLabel("Adaptive Moral Assessment");
-        lblQuizTitle.setFont(headingFont(18f));
-        lblQuizTitle.setForeground(COLOR_PRIMARY_GREEN);
-
         lblDifficulty = new JLabel("Difficulty: Easy");
         lblDifficulty.setFont(new Font("SansSerif", Font.ITALIC, 12));
         lblDifficulty.setForeground(COLOR_MID_GREY);
 
-        topLeft.add(lblQuizTitle);
         topLeft.add(lblDifficulty);
 
         JPanel topRight = new JPanel();
@@ -536,8 +789,6 @@ public class TestGUI extends JFrame {
         lblProgress.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
         topRight.add(lblTimer);
-        topRight.add(Box.createRigidArea(new Dimension(0, 4)));
-        topRight.add(btnBreak);
         topRight.add(Box.createRigidArea(new Dimension(0, 4)));
         topRight.add(lblProgress);
 
@@ -628,46 +879,18 @@ public class TestGUI extends JFrame {
     }
 
     private JButton createAnswerButton(String text, Color bg) {
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int arc = Math.min(getWidth(), getHeight()) / 4; // 25% radius
-                if (getModel().isPressed()) {
-                    g2.setColor(getBackground().darker());
-                } else if (getModel().isRollover()) {
-                    g2.setColor(getBackground().brighter());
-                } else {
-                    g2.setColor(getBackground());
-                }
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
-                g2.dispose();
-                // Paint text on top
-                super.paintComponent(g);
-            }
-
-            @Override
-            protected void paintBorder(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int arc = Math.min(getWidth(), getHeight()) / 4; // 25% radius
-                g2.setColor(getBackground().equals(Color.WHITE) || getBackground().equals(COLOR_WHITE)
-                        ? COLOR_PRIMARY_GREEN : getBackground().darker());
-                g2.setStroke(new BasicStroke(2));
-                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, arc, arc);
-                g2.dispose();
-            }
-        };
+        JButton btn = new JButton(text);
         btn.setFont(new Font("SansSerif", Font.BOLD, 20));
         btn.setPreferredSize(new Dimension(180, 60));
-        btn.setBackground(bg);
         btn.setForeground(bg.equals(Color.WHITE) || bg.equals(COLOR_WHITE) ? COLOR_PRIMARY_GREEN : Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(true);
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Apply unified 3D gloss styling (same as welcome panel buttons)
+        styleButton(btn, bg, 20, true);
+        btn.setFont(new Font("SansSerif", Font.BOLD, 20));
+        btn.setForeground(bg.equals(Color.WHITE) || bg.equals(COLOR_WHITE) ? COLOR_PRIMARY_GREEN : Color.WHITE);
+        btn.setPreferredSize(new Dimension(180, 60));
+
         return btn;
     }
 
@@ -870,15 +1093,22 @@ public class TestGUI extends JFrame {
             btnBreak.setEnabled(true);
             btnBreak.setForeground(COLOR_TEAL);
             btnBreak.setText("☕ Break (2 min)");
+            breakCountdownMenu.setText("☕ Break (2 min)");
+            breakCountdownMenu.setForeground(COLOR_MID_GREY);
+            breakCountdownMenu.setEnabled(false);
         } else if (engine.isBreakUsed()) {
             btnBreak.setEnabled(false);
             btnBreak.setText("☕ Break used");
             btnBreak.setForeground(COLOR_MID_GREY);
+            breakCountdownMenu.setText("☕ Break used");
+            breakCountdownMenu.setForeground(COLOR_MID_GREY);
+            breakCountdownMenu.setEnabled(false);
         } else {
             btnBreak.setEnabled(false);
             int questionsUntilBreak = 45 - (currentQuestionIndex + 1);
             if (questionsUntilBreak > 0) {
                 btnBreak.setText(String.format("☕ in %d Qs", questionsUntilBreak));
+                breakCountdownMenu.setText(String.format("☕ Break in %d Qs", questionsUntilBreak));
             }
         }
 
@@ -1007,25 +1237,29 @@ public class TestGUI extends JFrame {
         btnYes.setEnabled(false);
         btnNo.setEnabled(false);
 
-        // Show break countdown (2 minutes = 120 seconds)
+        // Show break countdown in the menu bar item (2 minutes = 120 seconds)
         final int[] breakTime = {120};
-        lblTimer.setText("☕ BREAK: 2:00");
-        lblTimer.setForeground(COLOR_TEAL);
+        breakCountdownMenu.setEnabled(true);
+        breakCountdownMenu.setText("☕ BREAK: 2:00");
+        breakCountdownMenu.setForeground(COLOR_TEAL);
 
         Timer breakTimer = new Timer(1000, null);
         breakTimer.addActionListener(e -> {
             breakTime[0]--;
             int mins = breakTime[0] / 60;
             int secs = breakTime[0] % 60;
-            lblTimer.setText(String.format("☕ BREAK: %d:%02d", mins, secs));
+            breakCountdownMenu.setText(String.format("☕ BREAK: %d:%02d", mins, secs));
 
             if (breakTime[0] <= 10) {
-                lblTimer.setForeground(COLOR_WARNING_ORANGE); // warning
+                breakCountdownMenu.setForeground(COLOR_WARNING_ORANGE); // warning
             }
 
             if (breakTime[0] <= 0) {
                 breakTimer.stop();
                 // Resume: restart the question timer
+                breakCountdownMenu.setText("☕ Break used");
+                breakCountdownMenu.setForeground(COLOR_MID_GREY);
+                breakCountdownMenu.setEnabled(false);
                 lblTimer.setForeground(COLOR_DARK_GREEN);
                 btnYes.setEnabled(true);
                 btnNo.setEnabled(true);
@@ -1279,8 +1513,110 @@ public class TestGUI extends JFrame {
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setOpaque(true);
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        // Read gloss parameters from config
+        final int glossTopAlpha = config.getGlossTopAlpha();
+        final int glossPercent = config.getGlossPercent();
+        final int shadowDepth = config.getGlossShadowDepth();
+        final int shadowAlpha = config.getGlossShadowAlpha();
+        final int outlineAlpha = config.getGlossOutlineAlpha();
+        final int arc = config.getGlossArcRadius();
+
+        // Custom 3D gloss paint with configurable linear gradient
+        btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void paint(Graphics g, javax.swing.JComponent c) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int w = c.getWidth();
+                int h = c.getHeight();
+
+                // Base fill
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+                // 3D gloss: linear gradient top highlight with bezier-curved boundary
+                int glossHeight = (int)(h * glossPercent / 100.0);
+                java.awt.geom.GeneralPath glossPath = new java.awt.geom.GeneralPath();
+                glossPath.moveTo(0, 0);
+                glossPath.lineTo(w, 0);
+                glossPath.lineTo(w, glossHeight);
+                // Cubic bezier curve across the bottom of the gloss
+                glossPath.curveTo(w * 0.75, glossHeight * 1.3,
+                                  w * 0.25, glossHeight * 1.3,
+                                  0, glossHeight);
+                glossPath.closePath();
+
+                GradientPaint glossGradient = new GradientPaint(
+                    0, 0, new Color(255, 255, 255, glossTopAlpha),
+                    0, glossHeight, new Color(255, 255, 255, 0)
+                );
+                Shape oldClip = g2.getClip();
+                g2.clip(new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, arc, arc));
+                g2.setPaint(glossGradient);
+                g2.fill(glossPath);
+                g2.setClip(oldClip);
+
+                // Bottom shadow for depth
+                if (shadowDepth > 0) {
+                    GradientPaint shadowGradient = new GradientPaint(
+                        0, h - shadowDepth, new Color(0, 0, 0, 0),
+                        0, h, new Color(0, 0, 0, shadowAlpha)
+                    );
+                    g2.clip(new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, arc, arc));
+                    g2.setPaint(shadowGradient);
+                    g2.fillRect(0, h - shadowDepth, w, shadowDepth);
+                    g2.setClip(oldClip);
+                }
+
+                // Minor outline
+                if (outlineAlpha > 0) {
+                    g2.setColor(new Color(0, 0, 0, outlineAlpha));
+                    g2.setStroke(new BasicStroke(1));
+                    g2.drawRoundRect(0, 0, w - 1, h - 1, arc, arc);
+                }
+
+                g2.dispose();
+
+                // Paint text
+                super.paint(g, c);
+            }
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Frame corner shaping — rounded bottom corners
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void applyFrameCornerShape() {
+        int radiusPercent = config.getFrameCornerRadius();
+        if (radiusPercent <= 0) {
+            setShape(null);
+            return;
+        }
+
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return;
+
+        int arcRadius = (int)(h * radiusPercent / 100.0);
+
+        // Square top corners, rounded bottom corners
+        java.awt.geom.GeneralPath path = new java.awt.geom.GeneralPath();
+        path.moveTo(0, 0);
+        path.lineTo(w, 0);
+        path.lineTo(w, h - arcRadius);
+        path.quadTo(w, h, w - arcRadius, h);
+        path.lineTo(arcRadius, h);
+        path.quadTo(0, h, 0, h - arcRadius);
+        path.lineTo(0, 0);
+        path.closePath();
+
+        setShape(path);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

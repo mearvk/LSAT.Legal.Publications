@@ -42,6 +42,11 @@ public class TestConfig {
     private Color fontColor;
     private String difficulty;  // easy, moderate, standard, hard, expert
     private String language;    // english, spanish, french, american_prudent, german, greek
+    private String titlebarDoubleclick; // go_back, pause
+    private String symbolDefinition;   // text shown when 𓈌 is clicked
+    private String curveWeights;       // descriptor:integer pairs for curve & pacing
+    private int frameCornerRadius;     // percentage (0–50) for bottom corner rounding
+    private int[] buttonGloss;         // [topAlpha, glossPercent, shadowDepth, shadowAlpha, outlineAlpha, arcRadius]
 
     // ─────────────────────────────────────────────────────────────────────────
     // Constructor
@@ -52,12 +57,20 @@ public class TestConfig {
         load();
     }
 
+    private static final String DEFAULT_CURVE_WEIGHTS =
+        "Beginning:20,Early:45,Rising:72,Building:90,Approaching:98,Middle:100,Sustaining:98,Declining:90,Waning:72,End:45";
+
     private void loadDefaults() {
         fontFamily = DEFAULT_FONT_FAMILY;
         fontSize = DEFAULT_FONT_SIZE;
         fontColor = Color.WHITE;
         difficulty = DEFAULT_DIFFICULTY;
         language = DEFAULT_LANGUAGE;
+        titlebarDoubleclick = "go_back";
+        symbolDefinition = "The State has an interest in Human Domomy of at $300,000,000 per Second per Ant of Human Anatomy.";
+        curveWeights = DEFAULT_CURVE_WEIGHTS;
+        frameCornerRadius = 28;
+        buttonGloss = new int[]{120, 25, 8, 50, 40, 12};
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -79,10 +92,20 @@ public class TestConfig {
             fontColor = parseColor(props.getProperty("font.color", DEFAULT_FONT_COLOR));
             difficulty = props.getProperty("test.difficulty", DEFAULT_DIFFICULTY).toLowerCase();
             language = props.getProperty("test.language", DEFAULT_LANGUAGE).toLowerCase();
+            titlebarDoubleclick = props.getProperty("titlebar.doubleclick", "go_back").toLowerCase();
+            symbolDefinition = props.getProperty("symbol.definition",
+                "The State has an interest in Human Domomy of at $300,000,000 per Second per Ant of Human Anatomy.");
+            curveWeights = props.getProperty("curve.weights", DEFAULT_CURVE_WEIGHTS);
+            frameCornerRadius = Math.max(0, Math.min(50,
+                Integer.parseInt(props.getProperty("frame.corner.radius", "28"))));
+            buttonGloss = parseButtonGloss(props.getProperty("button.gloss", "120,25,8,50,40,12"));
 
             // Validate
             if (!isValidDifficulty(difficulty)) difficulty = DEFAULT_DIFFICULTY;
             if (!isValidLanguage(language)) language = DEFAULT_LANGUAGE;
+            if (!titlebarDoubleclick.equals("go_back") && !titlebarDoubleclick.equals("pause")) {
+                titlebarDoubleclick = "go_back";
+            }
 
         } catch (Exception e) {
             System.err.println("Error loading config, using defaults: " + e.getMessage());
@@ -149,6 +172,105 @@ public class TestConfig {
     public String getLanguage() { return language; }
     public void setLanguage(String lang) {
         if (isValidLanguage(lang)) this.language = lang.toLowerCase();
+    }
+
+    public String getTitlebarDoubleclick() { return titlebarDoubleclick; }
+    public void setTitlebarDoubleclick(String action) {
+        if ("go_back".equals(action) || "pause".equals(action)) this.titlebarDoubleclick = action;
+    }
+
+    public String getSymbolDefinition() { return symbolDefinition; }
+    public void setSymbolDefinition(String def) {
+        if (def != null && !def.isEmpty()) this.symbolDefinition = def;
+    }
+
+    public String getCurveWeights() { return curveWeights; }
+    public void setCurveWeights(String weights) {
+        if (weights != null && !weights.isEmpty()) this.curveWeights = weights;
+    }
+
+    public int getFrameCornerRadius() { return frameCornerRadius; }
+    public void setFrameCornerRadius(int radius) {
+        this.frameCornerRadius = Math.max(0, Math.min(50, radius));
+    }
+
+    public int[] getButtonGloss() { return buttonGloss; }
+    public void setButtonGloss(int[] gloss) {
+        if (gloss != null && gloss.length == 6) this.buttonGloss = gloss;
+    }
+
+    /** topAlpha */
+    public int getGlossTopAlpha() { return buttonGloss[0]; }
+    /** glossPercent (height of gloss as % of button) */
+    public int getGlossPercent() { return buttonGloss[1]; }
+    /** shadowDepth in pixels */
+    public int getGlossShadowDepth() { return buttonGloss[2]; }
+    /** shadowAlpha */
+    public int getGlossShadowAlpha() { return buttonGloss[3]; }
+    /** outlineAlpha */
+    public int getGlossOutlineAlpha() { return buttonGloss[4]; }
+    /** arcRadius in pixels */
+    public int getGlossArcRadius() { return buttonGloss[5]; }
+
+    private static int[] parseButtonGloss(String s) {
+        int[] defaults = {120, 25, 8, 50, 40, 12};
+        if (s == null || s.isEmpty()) return defaults;
+        String[] parts = s.split(",");
+        if (parts.length != 6) return defaults;
+        try {
+            int[] result = new int[6];
+            result[0] = Math.max(0, Math.min(255, Integer.parseInt(parts[0].trim()))); // topAlpha
+            result[1] = Math.max(0, Math.min(100, Integer.parseInt(parts[1].trim()))); // glossPercent
+            result[2] = Math.max(0, Math.min(20, Integer.parseInt(parts[2].trim())));  // shadowDepth
+            result[3] = Math.max(0, Math.min(255, Integer.parseInt(parts[3].trim()))); // shadowAlpha
+            result[4] = Math.max(0, Math.min(255, Integer.parseInt(parts[4].trim()))); // outlineAlpha
+            result[5] = Math.max(0, Math.min(30, Integer.parseInt(parts[5].trim())));  // arcRadius
+            return result;
+        } catch (NumberFormatException e) {
+            return defaults;
+        }
+    }
+
+    /**
+     * Parse curve.weights into an array of 10 double values (0.0–2.0).
+     * Format: "Descriptor:integer,Descriptor:integer,..."
+     * Integer is 0–200, divided by 100 to get the weight.
+     * Returns null if parsing fails.
+     */
+    public double[] parseCurveWeights() {
+        if (curveWeights == null || curveWeights.isEmpty()) return null;
+        String[] entries = curveWeights.split(",");
+        if (entries.length != 10) return null;
+
+        double[] weights = new double[10];
+        for (int i = 0; i < 10; i++) {
+            String[] parts = entries[i].trim().split(":");
+            if (parts.length != 2) return null;
+            try {
+                int val = Integer.parseInt(parts[1].trim());
+                weights[i] = Math.max(0.0, Math.min(2.0, val / 100.0));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return weights;
+    }
+
+    /**
+     * Parse curve.weights into an array of descriptor labels.
+     */
+    public String[] parseCurveLabels() {
+        if (curveWeights == null || curveWeights.isEmpty()) return null;
+        String[] entries = curveWeights.split(",");
+        if (entries.length != 10) return null;
+
+        String[] labels = new String[10];
+        for (int i = 0; i < 10; i++) {
+            String[] parts = entries[i].trim().split(":");
+            if (parts.length != 2) return null;
+            labels[i] = parts[0].trim();
+        }
+        return labels;
     }
 
     /** Get a Font object from current config */
