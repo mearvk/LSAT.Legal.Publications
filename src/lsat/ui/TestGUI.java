@@ -9,7 +9,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -93,20 +95,111 @@ public class TestGUI extends JFrame {
     private JLabel lblResultIntellect;
     private JTextArea txtResultReasoning;
 
-    // Color themes for performance tiers
-    private static final Color COLOR_NEUTRAL_BG = new Color(34, 40, 49);
-    private static final Color COLOR_GREEN_BG = new Color(27, 54, 40);
-    private static final Color COLOR_SILVER_BG = new Color(40, 45, 55);
-    private static final Color COLOR_GOLD_BG = new Color(50, 45, 25);
+    // ─── Fidelity-inspired color palette (white, grey, green) ───
+    // Backgrounds
+    private static final Color COLOR_WHITE = new Color(255, 255, 255);
+    private static final Color COLOR_OFF_WHITE = new Color(251, 250, 243);   // #FBFAF3
+    private static final Color COLOR_LIGHT_GREY = new Color(240, 240, 240);  // #F0F0F0
+    private static final Color COLOR_MID_GREY = new Color(82, 81, 80);       // #525150
+    private static final Color COLOR_DARK_GREY = new Color(64, 63, 62);      // #403F3E
+    private static final Color COLOR_TEXT_DARK = new Color(20, 20, 20);      // #141414
 
-    private static final Color COLOR_NEUTRAL_ACCENT = new Color(0, 200, 180);
-    private static final Color COLOR_GREEN_ACCENT = new Color(76, 175, 80);
-    private static final Color COLOR_SILVER_ACCENT = new Color(189, 195, 199);
-    private static final Color COLOR_GOLD_ACCENT = new Color(255, 215, 0);
+    // Greens
+    private static final Color COLOR_PRIMARY_GREEN = new Color(54, 135, 39);   // #368727
+    private static final Color COLOR_DARK_GREEN = new Color(30, 111, 29);      // #1E6F1D
+    private static final Color COLOR_FOREST_GREEN = new Color(15, 83, 25);     // #0F5319
+    private static final Color COLOR_SUCCESS_GREEN = new Color(72, 172, 54);   // #48AC36
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Question Pool — all questions from all sections, tagged with difficulty
-    // ─────────────────────────────────────────────────────────────────────────
+    // Accent greens / teals
+    private static final Color COLOR_TEAL = new Color(0, 150, 129);            // #009681
+    private static final Color COLOR_DARK_TEAL = new Color(5, 128, 112);       // #058070
+
+    // Utility
+    private static final Color COLOR_ERROR_RED = new Color(250, 57, 57);       // #FA3939
+    private static final Color COLOR_WARNING_ORANGE = new Color(255, 130, 16); // #FF8210
+    private static final Color COLOR_GOLD = new Color(255, 202, 31);           // #FFCA1F
+
+    // Color themes for performance tiers (light theme)
+    private static final Color COLOR_NEUTRAL_BG = COLOR_WHITE;
+    private static final Color COLOR_GREEN_BG = new Color(235, 248, 234);      // very light green
+    private static final Color COLOR_SILVER_BG = new Color(242, 244, 247);     // light blue-grey
+    private static final Color COLOR_GOLD_BG = new Color(255, 250, 230);       // warm cream
+
+    private static final Color COLOR_NEUTRAL_ACCENT = COLOR_PRIMARY_GREEN;
+    private static final Color COLOR_GREEN_ACCENT = COLOR_SUCCESS_GREEN;
+    private static final Color COLOR_SILVER_ACCENT = COLOR_MID_GREY;
+    private static final Color COLOR_GOLD_ACCENT = COLOR_GOLD;
+
+    // ─── Branding font (Barlow Condensed Bold Italic) ────────────────────────
+    private static final Font BRANDING_FONT = loadBrandingFont();
+
+    private static Font loadBrandingFont() {
+        // Attempt to load Barlow Condensed Bold Italic from fonts/ directory
+        String[] candidates = {
+            "fonts/BarlowCondensed-BoldItalic.ttf",
+            "fonts/BarlowCondensed-BoldItalic.otf",
+            "fonts/BarlowCondensed-Italic.ttf",
+            "fonts/BarlowCondensed-Italic.otf",
+            "fonts/BarlowCondensed-Bold.ttf",
+            "fonts/BarlowCondensed-Bold.otf",
+            "fonts/BarlowCondensed-Regular.ttf",
+            "fonts/BarlowCondensed-Regular.otf"
+        };
+        for (String path : candidates) {
+            File fontFile = new File(path);
+            if (fontFile.exists()) {
+                try {
+                    Font base = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                    return base.deriveFont(Font.BOLD | Font.ITALIC, 22f);
+                } catch (FontFormatException | IOException ignored) { }
+            }
+        }
+        // Also try loading from classpath resources
+        for (String path : candidates) {
+            try (InputStream is = TestGUI.class.getResourceAsStream("/" + path)) {
+                if (is != null) {
+                    Font base = Font.createFont(Font.TRUETYPE_FONT, is);
+                    return base.deriveFont(Font.BOLD | Font.ITALIC, 22f);
+                }
+            } catch (FontFormatException | IOException | NullPointerException ignored) { }
+        }
+        // Fallback: system sans-serif bold italic
+        return new Font("SansSerif", Font.BOLD | Font.ITALIC, 22);
+    }
+
+    // ─── Heading font (Francois One Italic) ─────────────────────────────────
+    private static final Font HEADING_FONT_BASE = loadHeadingFont();
+
+    private static Font loadHeadingFont() {
+        String[] candidates = {
+            "fonts/FrancoisOne-Regular.ttf",
+            "fonts/FrancoisOne-Regular.otf",
+            "fonts/FrancoisOne.ttf",
+            "fonts/FrancoisOne.otf"
+        };
+        for (String path : candidates) {
+            File fontFile = new File(path);
+            if (fontFile.exists()) {
+                try {
+                    Font base = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                    return base.deriveFont(Font.ITALIC, 24f);
+                } catch (FontFormatException | IOException ignored) { }
+            }
+        }
+        for (String path : candidates) {
+            try (InputStream is = TestGUI.class.getResourceAsStream("/" + path)) {
+                if (is != null) {
+                    Font base = Font.createFont(Font.TRUETYPE_FONT, is);
+                    return base.deriveFont(Font.ITALIC, 24f);
+                }
+            } catch (FontFormatException | IOException | NullPointerException ignored) { }
+        }
+        return new Font("SansSerif", Font.BOLD | Font.ITALIC, 24);
+    }
+
+    private static Font headingFont(float size) {
+        return HEADING_FONT_BASE.deriveFont(Font.ITALIC, size);
+    }
 
     // Difficulty: 1=easy (basic ethics), 2=moderate, 3=medium, 4=hard, 5=expert
     // We order them easy→hard for the running start method.
@@ -230,7 +323,17 @@ public class TestGUI extends JFrame {
         cardPanel.add(createQuizPanel(), CARD_QUIZ);
         cardPanel.add(createResultsPanel(), CARD_RESULTS);
 
-        add(cardPanel);
+        // ─── Persistent branding header: upper-left "LSAT Legal Publications" ───
+        JPanel brandingHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+        brandingHeader.setBackground(COLOR_WHITE);
+        JLabel brandingLabel = new JLabel("LSAT Legal Publications");
+        brandingLabel.setFont(BRANDING_FONT);
+        brandingLabel.setForeground(COLOR_PRIMARY_GREEN);
+        brandingHeader.add(brandingLabel);
+
+        setLayout(new BorderLayout());
+        add(brandingHeader, BorderLayout.NORTH);
+        add(cardPanel, BorderLayout.CENTER);
         cardLayout.show(cardPanel, CARD_WELCOME);
 
         // Global key bindings for Y/N during quiz
@@ -264,36 +367,57 @@ public class TestGUI extends JFrame {
 
     private JPanel createWelcomePanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(COLOR_NEUTRAL_BG);
+        panel.setBackground(COLOR_WHITE);
         panel.setBorder(new EmptyBorder(50, 60, 50, 60));
 
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
         titlePanel.setOpaque(false);
 
+        // ─── Title row: logo orb (left) + "LSAT Moral Assessment" (right) ───
+        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        titleRow.setOpaque(false);
+        titleRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel logoLabel = new JLabel();
+        logoLabel.setOpaque(false);
+        try {
+            java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(new File("images/logo-orb.png"));
+            if (original != null) {
+                // Scale preserving aspect ratio, height matches title line (~50px)
+                int targetHeight = 50;
+                int targetWidth = (int) ((double) original.getWidth() / original.getHeight() * targetHeight);
+                Image scaled = original.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+                logoLabel.setIcon(new ImageIcon(scaled));
+            }
+        } catch (IOException ignored) { }
+
         JLabel title = new JLabel("LSAT Moral Assessment");
-        title.setFont(new Font("SansSerif", Font.BOLD, 36));
-        title.setForeground(Color.WHITE);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        title.setFont(headingFont(36f));
+        title.setForeground(COLOR_FOREST_GREEN);
+
+        titleRow.add(logoLabel);
+        titleRow.add(title);
 
         JLabel subtitle = new JLabel("Adaptive Ethical Character Evaluation");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        subtitle.setForeground(new Color(180, 180, 180));
+        subtitle.setFont(headingFont(18f));
+        subtitle.setForeground(COLOR_MID_GREY);
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel desc = new JLabel("<html><center>Questions progress from easy to hard with adaptive pacing.<br>"
                 + "Your morality and streak are tracked throughout.</center></html>");
         desc.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        desc.setForeground(new Color(140, 140, 140));
+        desc.setForeground(COLOR_DARK_GREY);
+        desc.setHorizontalAlignment(SwingConstants.CENTER);
         desc.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel owner = new JLabel("© 2026 Max Rupplin — All Rights Reserved");
         owner.setFont(new Font("SansSerif", Font.ITALIC, 12));
-        owner.setForeground(new Color(100, 100, 100));
+        owner.setForeground(COLOR_MID_GREY);
         owner.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         titlePanel.add(Box.createVerticalGlue());
-        titlePanel.add(title);
+        titlePanel.add(titleRow);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 10)));
         titlePanel.add(subtitle);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -302,15 +426,19 @@ public class TestGUI extends JFrame {
         titlePanel.add(owner);
         titlePanel.add(Box.createVerticalGlue());
 
-        // Buttons
+        // Buttons — primary green CTA, secondary grey, same size, Francois One italic
         JButton btnStart = new JButton("Begin Adaptive Test");
-        styleButton(btnStart, new Color(0, 150, 136), 18, true);
-        btnStart.setPreferredSize(new Dimension(250, 50));
+        styleButton(btnStart, COLOR_PRIMARY_GREEN, 18, true);
+        btnStart.setFont(headingFont(18f));
+        btnStart.setPreferredSize(new Dimension(300, 50));
+        btnStart.setMaximumSize(new Dimension(300, 50));
         btnStart.addActionListener(e -> startAdaptiveTest());
 
         JButton btnAdmin = new JButton("Admin: Adjust Curve & Pacing");
-        styleButton(btnAdmin, new Color(75, 63, 114), 14, false);
-        btnAdmin.setPreferredSize(new Dimension(250, 40));
+        styleButton(btnAdmin, COLOR_MID_GREY, 14, false);
+        btnAdmin.setFont(headingFont(14f));
+        btnAdmin.setPreferredSize(new Dimension(300, 50));
+        btnAdmin.setMaximumSize(new Dimension(300, 50));
         btnAdmin.addActionListener(e -> cardLayout.show(cardPanel, CARD_ADMIN));
 
         JPanel btnPanel = new JPanel();
@@ -335,8 +463,8 @@ public class TestGUI extends JFrame {
     private JPanel createQuizPanel() {
         quizPanel = new JPanel(new BorderLayout());
         quizPanel.setName(CARD_QUIZ);
-        quizPanel.setBackground(COLOR_NEUTRAL_BG);
-        quizPanel.setBorder(new EmptyBorder(20, 40, 20, 40));
+        quizPanel.setBackground(COLOR_WHITE);
+        quizPanel.setBorder(new EmptyBorder(5, 40, 20, 10));
 
         // Top bar: title + progress + difficulty + timer
         quizTopBar = new JPanel(new BorderLayout());
@@ -348,12 +476,12 @@ public class TestGUI extends JFrame {
         topLeft.setOpaque(false);
 
         lblQuizTitle = new JLabel("Adaptive Moral Assessment");
-        lblQuizTitle.setFont(new Font("SansSerif", Font.BOLD, 18));
-        lblQuizTitle.setForeground(COLOR_NEUTRAL_ACCENT);
+        lblQuizTitle.setFont(headingFont(18f));
+        lblQuizTitle.setForeground(COLOR_PRIMARY_GREEN);
 
         lblDifficulty = new JLabel("Difficulty: Easy");
         lblDifficulty.setFont(new Font("SansSerif", Font.ITALIC, 12));
-        lblDifficulty.setForeground(new Color(160, 160, 160));
+        lblDifficulty.setForeground(COLOR_MID_GREY);
 
         topLeft.add(lblQuizTitle);
         topLeft.add(lblDifficulty);
@@ -362,18 +490,36 @@ public class TestGUI extends JFrame {
         topRight.setLayout(new BoxLayout(topRight, BoxLayout.Y_AXIS));
         topRight.setOpaque(false);
 
-        lblProgress = new JLabel("Question 1 of 76");
-        lblProgress.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        lblProgress.setForeground(new Color(160, 160, 160));
-        lblProgress.setAlignmentX(Component.RIGHT_ALIGNMENT);
-
         lblTimer = new JLabel("⏱ 15s");
         lblTimer.setFont(new Font("SansSerif", Font.BOLD, 16));
-        lblTimer.setForeground(new Color(255, 200, 50));
+        lblTimer.setForeground(COLOR_DARK_GREEN);
         lblTimer.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        topRight.add(lblProgress);
+        btnBreak = new JButton("☕ Break (2 min)");
+        btnBreak.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        btnBreak.setPreferredSize(new Dimension(130, 30));
+        btnBreak.setMaximumSize(new Dimension(130, 30));
+        btnBreak.setBackground(COLOR_LIGHT_GREY);
+        btnBreak.setForeground(COLOR_MID_GREY);
+        btnBreak.setFocusPainted(false);
+        btnBreak.setBorderPainted(false);
+        btnBreak.setOpaque(true);
+        btnBreak.setEnabled(false);
+        btnBreak.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnBreak.setToolTipText("Available after 45 questions. One 2-minute break allowed.");
+        btnBreak.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        btnBreak.addActionListener(e -> takeBreak());
+
+        lblProgress = new JLabel("Question 1 of 76");
+        lblProgress.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        lblProgress.setForeground(COLOR_MID_GREY);
+        lblProgress.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
         topRight.add(lblTimer);
+        topRight.add(Box.createRigidArea(new Dimension(0, 4)));
+        topRight.add(btnBreak);
+        topRight.add(Box.createRigidArea(new Dimension(0, 4)));
+        topRight.add(lblProgress);
 
         quizTopBar.add(topLeft, BorderLayout.WEST);
         quizTopBar.add(topRight, BorderLayout.EAST);
@@ -384,18 +530,18 @@ public class TestGUI extends JFrame {
 
         lblMorale = new JLabel("Morale: 0.0");
         lblMorale.setFont(new Font("SansSerif", Font.BOLD, 13));
-        lblMorale.setForeground(new Color(0, 200, 180));
+        lblMorale.setForeground(COLOR_PRIMARY_GREEN);
 
         lblStreak = new JLabel("Streak: 0");
         lblStreak.setFont(new Font("SansSerif", Font.BOLD, 13));
-        lblStreak.setForeground(new Color(255, 165, 0));
+        lblStreak.setForeground(COLOR_WARNING_ORANGE);
 
         moraleBar.add(lblMorale);
         moraleBar.add(lblStreak);
 
         lblIntellect = new JLabel("Intellect: —");
         lblIntellect.setFont(new Font("SansSerif", Font.BOLD, 13));
-        lblIntellect.setForeground(new Color(180, 130, 255));
+        lblIntellect.setForeground(COLOR_DARK_TEAL);
         moraleBar.add(lblIntellect);
 
         // IQ estimation bar
@@ -404,11 +550,11 @@ public class TestGUI extends JFrame {
 
         lblLiveIQ = new JLabel("IQ ~140 (120–160)");
         lblLiveIQ.setFont(new Font("SansSerif", Font.BOLD, 14));
-        lblLiveIQ.setForeground(new Color(100, 220, 100));
+        lblLiveIQ.setForeground(COLOR_DARK_GREEN);
 
         lblWeighted = new JLabel("Overall: — [IQ×40% + Test×60%]");
         lblWeighted.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        lblWeighted.setForeground(new Color(160, 160, 160));
+        lblWeighted.setForeground(COLOR_MID_GREY);
 
         iqBar.add(lblLiveIQ);
         iqBar.add(lblWeighted);
@@ -425,11 +571,11 @@ public class TestGUI extends JFrame {
         topSection.add(quizTopBar, BorderLayout.NORTH);
         topSection.add(statsPanel, BorderLayout.SOUTH);
 
-        // Question area
+        // Question area — white card, text color based on language
         txtQuestion = new JTextArea();
         txtQuestion.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        txtQuestion.setForeground(Color.WHITE);
-        txtQuestion.setBackground(new Color(44, 50, 59));
+        txtQuestion.setForeground(COLOR_TEXT_DARK);
+        txtQuestion.setBackground(COLOR_WHITE);
         txtQuestion.setLineWrap(true);
         txtQuestion.setWrapStyleWord(true);
         txtQuestion.setEditable(false);
@@ -440,32 +586,18 @@ public class TestGUI extends JFrame {
         quizBtnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 10));
         quizBtnPanel.setOpaque(false);
 
-        btnYes = createAnswerButton("YES (Y)", new Color(46, 125, 50));
-        btnNo = createAnswerButton("NO (N)", new Color(198, 40, 40));
-
-        btnBreak = new JButton("☕ Break (2 min)");
-        btnBreak.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        btnBreak.setPreferredSize(new Dimension(130, 40));
-        btnBreak.setBackground(new Color(70, 70, 90));
-        btnBreak.setForeground(new Color(140, 140, 140));
-        btnBreak.setFocusPainted(false);
-        btnBreak.setBorderPainted(false);
-        btnBreak.setOpaque(true);
-        btnBreak.setEnabled(false);
-        btnBreak.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnBreak.setToolTipText("Available after 45 questions. One 2-minute break allowed.");
-        btnBreak.addActionListener(e -> takeBreak());
+        btnYes = createAnswerButton("YES (Y)", COLOR_PRIMARY_GREEN);
+        btnNo = createAnswerButton("NO (N)", COLOR_WHITE);
 
         lblBonusTime = new JLabel("");
         lblBonusTime.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        lblBonusTime.setForeground(new Color(100, 200, 255));
+        lblBonusTime.setForeground(COLOR_TEAL);
 
         btnYes.addActionListener(e -> answerQuestion(true));
         btnNo.addActionListener(e -> answerQuestion(false));
 
         quizBtnPanel.add(btnYes);
         quizBtnPanel.add(btnNo);
-        quizBtnPanel.add(btnBreak);
         quizBtnPanel.add(lblBonusTime);
 
         quizPanel.add(topSection, BorderLayout.NORTH);
@@ -476,14 +608,45 @@ public class TestGUI extends JFrame {
     }
 
     private JButton createAnswerButton(String text, Color bg) {
-        JButton btn = new JButton(text);
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int arc = Math.min(getWidth(), getHeight()) / 4; // 25% radius
+                if (getModel().isPressed()) {
+                    g2.setColor(getBackground().darker());
+                } else if (getModel().isRollover()) {
+                    g2.setColor(getBackground().brighter());
+                } else {
+                    g2.setColor(getBackground());
+                }
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+                g2.dispose();
+                // Paint text on top
+                super.paintComponent(g);
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int arc = Math.min(getWidth(), getHeight()) / 4; // 25% radius
+                g2.setColor(getBackground().equals(Color.WHITE) || getBackground().equals(COLOR_WHITE)
+                        ? COLOR_PRIMARY_GREEN : getBackground().darker());
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, arc, arc);
+                g2.dispose();
+            }
+        };
         btn.setFont(new Font("SansSerif", Font.BOLD, 20));
         btn.setPreferredSize(new Dimension(180, 60));
         btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(bg.equals(Color.WHITE) || bg.equals(COLOR_WHITE) ? COLOR_PRIMARY_GREEN : Color.WHITE);
         btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
+        btn.setBorderPainted(true);
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }
@@ -494,7 +657,7 @@ public class TestGUI extends JFrame {
 
     private JPanel createResultsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(COLOR_NEUTRAL_BG);
+        panel.setBackground(COLOR_WHITE);
         panel.setBorder(new EmptyBorder(20, 40, 20, 40));
 
         JPanel center = new JPanel();
@@ -502,38 +665,38 @@ public class TestGUI extends JFrame {
         center.setOpaque(false);
 
         lblResultTitle = new JLabel("Assessment Complete");
-        lblResultTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
-        lblResultTitle.setForeground(Color.WHITE);
+        lblResultTitle.setFont(headingFont(24f));
+        lblResultTitle.setForeground(COLOR_FOREST_GREEN);
         lblResultTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultScore = new JLabel("0 / 0");
-        lblResultScore.setFont(new Font("SansSerif", Font.BOLD, 38));
-        lblResultScore.setForeground(COLOR_NEUTRAL_ACCENT);
+        lblResultScore.setFont(headingFont(38f));
+        lblResultScore.setForeground(COLOR_PRIMARY_GREEN);
         lblResultScore.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultPercent = new JLabel("Raw: 0%");
         lblResultPercent.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        lblResultPercent.setForeground(new Color(180, 180, 180));
+        lblResultPercent.setForeground(COLOR_MID_GREY);
         lblResultPercent.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultCurved = new JLabel("Curved: 0%");
         lblResultCurved.setFont(new Font("SansSerif", Font.BOLD, 16));
-        lblResultCurved.setForeground(new Color(180, 130, 255));
+        lblResultCurved.setForeground(COLOR_DARK_TEAL);
         lblResultCurved.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultMorale = new JLabel("Total Morale Boost: 0.0");
         lblResultMorale.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        lblResultMorale.setForeground(new Color(255, 165, 0));
+        lblResultMorale.setForeground(COLOR_WARNING_ORANGE);
         lblResultMorale.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultTier = new JLabel("Performance: —");
         lblResultTier.setFont(new Font("SansSerif", Font.BOLD, 18));
-        lblResultTier.setForeground(Color.WHITE);
+        lblResultTier.setForeground(COLOR_TEXT_DARK);
         lblResultTier.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         lblResultIntellect = new JLabel("Intellect: —");
         lblResultIntellect.setFont(new Font("SansSerif", Font.BOLD, 20));
-        lblResultIntellect.setForeground(new Color(200, 130, 255));
+        lblResultIntellect.setForeground(COLOR_DARK_GREEN);
         lblResultIntellect.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         center.add(lblResultTitle);
@@ -550,11 +713,11 @@ public class TestGUI extends JFrame {
         center.add(Box.createRigidArea(new Dimension(0, 12)));
         center.add(lblResultIntellect);
 
-        // Reasoning text area (grader interpretation)
+        // Reasoning text area (grader interpretation) — light grey card
         txtResultReasoning = new JTextArea(8, 50);
         txtResultReasoning.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        txtResultReasoning.setForeground(new Color(200, 200, 200));
-        txtResultReasoning.setBackground(new Color(44, 50, 59));
+        txtResultReasoning.setForeground(COLOR_DARK_GREY);
+        txtResultReasoning.setBackground(COLOR_LIGHT_GREY);
         txtResultReasoning.setEditable(false);
         txtResultReasoning.setLineWrap(true);
         txtResultReasoning.setWrapStyleWord(true);
@@ -562,12 +725,12 @@ public class TestGUI extends JFrame {
 
         JScrollPane reasoningScroll = new JScrollPane(txtResultReasoning);
         reasoningScroll.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                BorderFactory.createLineBorder(COLOR_LIGHT_GREY),
                 "Grader Interpretation",
                 javax.swing.border.TitledBorder.LEFT,
                 javax.swing.border.TitledBorder.TOP,
                 new Font("SansSerif", Font.PLAIN, 11),
-                new Color(160, 160, 160)));
+                COLOR_MID_GREY));
         reasoningScroll.setOpaque(false);
         reasoningScroll.getViewport().setOpaque(false);
         reasoningScroll.setPreferredSize(new Dimension(0, 180));
@@ -582,11 +745,11 @@ public class TestGUI extends JFrame {
         btnPanel.setOpaque(false);
 
         JButton btnRetry = new JButton("Retake Test");
-        styleButton(btnRetry, new Color(0, 150, 136), 14, false);
+        styleButton(btnRetry, COLOR_PRIMARY_GREEN, 14, false);
         btnRetry.addActionListener(e -> startAdaptiveTest());
 
         JButton btnMenu = new JButton("Back to Welcome");
-        styleButton(btnMenu, new Color(57, 62, 70), 14, false);
+        styleButton(btnMenu, COLOR_MID_GREY, 14, false);
         btnMenu.addActionListener(e -> {
             resetQuizColors();
             cardLayout.show(cardPanel, CARD_WELCOME);
@@ -642,7 +805,14 @@ public class TestGUI extends JFrame {
 
         // Apply font settings from config
         txtQuestion.setFont(config.getQuestionFont());
-        txtQuestion.setForeground(config.getFontColor());
+
+        // Text color: dark grey for English, Fidelity green for other languages
+        String lang = config.getLanguage();
+        if (lang == null || lang.toLowerCase().startsWith("en")) {
+            txtQuestion.setForeground(COLOR_DARK_GREY);
+        } else {
+            txtQuestion.setForeground(COLOR_PRIMARY_GREEN);
+        }
 
         resetQuizColors();
         showCurrentQuestion();
@@ -678,12 +848,12 @@ public class TestGUI extends JFrame {
         // Break button state
         if (engine.isBreakAvailable()) {
             btnBreak.setEnabled(true);
-            btnBreak.setForeground(new Color(100, 200, 255));
+            btnBreak.setForeground(COLOR_TEAL);
             btnBreak.setText("☕ Break (2 min)");
         } else if (engine.isBreakUsed()) {
             btnBreak.setEnabled(false);
             btnBreak.setText("☕ Break used");
-            btnBreak.setForeground(new Color(80, 80, 80));
+            btnBreak.setForeground(COLOR_MID_GREY);
         } else {
             btnBreak.setEnabled(false);
             int questionsUntilBreak = 45 - (currentQuestionIndex + 1);
@@ -702,9 +872,9 @@ public class TestGUI extends JFrame {
             lblTimer.setText(String.format("⏱ %ds", timeRemaining));
 
             if (timeRemaining <= 5) {
-                lblTimer.setForeground(new Color(255, 80, 80));
+                lblTimer.setForeground(COLOR_ERROR_RED);
             } else {
-                lblTimer.setForeground(new Color(255, 200, 50));
+                lblTimer.setForeground(COLOR_DARK_GREEN);
             }
 
             if (timeRemaining <= 0) {
@@ -756,18 +926,18 @@ public class TestGUI extends JFrame {
 
         // Color the IQ label based on passing status and lie reliability
         if (lieDetector.isUnreliable()) {
-            lblLiveIQ.setForeground(new Color(255, 80, 80)); // red — unreliable
+            lblLiveIQ.setForeground(COLOR_ERROR_RED); // red — unreliable
         } else if (liveIQ.isPassing()) {
             int mid = liveIQ.getIQMidpoint();
             if (mid >= 160) {
-                lblLiveIQ.setForeground(new Color(255, 215, 0));   // gold for strong
+                lblLiveIQ.setForeground(COLOR_GOLD);            // gold for strong
             } else if (mid >= 140) {
-                lblLiveIQ.setForeground(new Color(100, 220, 100)); // green for gifted mean
+                lblLiveIQ.setForeground(COLOR_PRIMARY_GREEN);   // green for gifted mean
             } else {
-                lblLiveIQ.setForeground(new Color(180, 220, 180)); // light green for passing
+                lblLiveIQ.setForeground(COLOR_SUCCESS_GREEN);   // light green for passing
             }
         } else {
-            lblLiveIQ.setForeground(new Color(255, 100, 100)); // red for at-risk
+            lblLiveIQ.setForeground(COLOR_ERROR_RED); // red for at-risk
         }
 
         // Update display
@@ -820,7 +990,7 @@ public class TestGUI extends JFrame {
         // Show break countdown (2 minutes = 120 seconds)
         final int[] breakTime = {120};
         lblTimer.setText("☕ BREAK: 2:00");
-        lblTimer.setForeground(new Color(100, 200, 255));
+        lblTimer.setForeground(COLOR_TEAL);
 
         Timer breakTimer = new Timer(1000, null);
         breakTimer.addActionListener(e -> {
@@ -830,13 +1000,13 @@ public class TestGUI extends JFrame {
             lblTimer.setText(String.format("☕ BREAK: %d:%02d", mins, secs));
 
             if (breakTime[0] <= 10) {
-                lblTimer.setForeground(new Color(255, 165, 0)); // warning
+                lblTimer.setForeground(COLOR_WARNING_ORANGE); // warning
             }
 
             if (breakTime[0] <= 0) {
                 breakTimer.stop();
                 // Resume: restart the question timer
-                lblTimer.setForeground(new Color(255, 200, 50));
+                lblTimer.setForeground(COLOR_DARK_GREEN);
                 btnYes.setEnabled(true);
                 btnNo.setEnabled(true);
                 // Restart question timer with full time for current question
@@ -890,11 +1060,11 @@ public class TestGUI extends JFrame {
     }
 
     private void resetQuizColors() {
-        quizPanel.setBackground(COLOR_NEUTRAL_BG);
-        lblQuizTitle.setForeground(COLOR_NEUTRAL_ACCENT);
-        lblMorale.setForeground(COLOR_NEUTRAL_ACCENT);
+        quizPanel.setBackground(COLOR_WHITE);
+        lblQuizTitle.setForeground(COLOR_PRIMARY_GREEN);
+        lblMorale.setForeground(COLOR_PRIMARY_GREEN);
         lblIntellect.setText("Intellect: —");
-        lblIntellect.setForeground(new Color(180, 130, 255));
+        lblIntellect.setForeground(COLOR_DARK_TEAL);
     }
 
     /**
@@ -917,16 +1087,16 @@ public class TestGUI extends JFrame {
         Color tierColor;
         switch (tier) {
             case VA:
-                tierColor = new Color(100, 200, 255); // cool blue for thoughtful
+                tierColor = COLOR_TEAL;               // teal for thoughtful
                 break;
             case S:
-                tierColor = new Color(255, 215, 0);   // gold for disciplined
+                tierColor = COLOR_GOLD;               // gold for disciplined
                 break;
             case PG:
-                tierColor = new Color(200, 130, 255);  // purple for comprehensive
+                tierColor = COLOR_DARK_GREEN;         // dark green for comprehensive
                 break;
             default:
-                tierColor = new Color(180, 130, 255);
+                tierColor = COLOR_DARK_TEAL;
                 break;
         }
 
@@ -940,7 +1110,7 @@ public class TestGUI extends JFrame {
 
         // Special glow for gifted protocol
         if (classifier.isGiftedProtocol()) {
-            lblIntellect.setForeground(new Color(255, 255, 200)); // bright warm white
+            lblIntellect.setForeground(COLOR_FOREST_GREEN); // deep green for 180+
         }
     }
 
@@ -975,19 +1145,19 @@ public class TestGUI extends JFrame {
         String tierText;
         switch (tier) {
             case GREEN:
-                tierColor = COLOR_GREEN_ACCENT;
+                tierColor = COLOR_SUCCESS_GREEN;
                 tierText = "Performance: ● WELL";
                 break;
             case SILVER:
-                tierColor = COLOR_SILVER_ACCENT;
+                tierColor = COLOR_MID_GREY;
                 tierText = "Performance: ● GREAT";
                 break;
             case GOLD:
-                tierColor = COLOR_GOLD_ACCENT;
+                tierColor = COLOR_GOLD;
                 tierText = "Performance: ★ SUPERB";
                 break;
             default:
-                tierColor = new Color(160, 160, 160);
+                tierColor = COLOR_MID_GREY;
                 tierText = "Performance: Needs Improvement";
                 break;
         }
@@ -1005,22 +1175,22 @@ public class TestGUI extends JFrame {
         Color intellectColor;
         switch (intellectTier) {
             case VA:
-                intellectColor = new Color(100, 200, 255);
+                intellectColor = COLOR_TEAL;
                 break;
             case S:
-                intellectColor = new Color(255, 215, 0);
+                intellectColor = COLOR_GOLD;
                 break;
             case PG:
-                intellectColor = new Color(200, 130, 255);
+                intellectColor = COLOR_DARK_GREEN;
                 break;
             default:
-                intellectColor = Color.WHITE;
+                intellectColor = COLOR_TEXT_DARK;
                 break;
         }
 
         // Override color for gifted protocol
         if (classifier.isGiftedProtocol()) {
-            intellectColor = new Color(255, 255, 200); // bright warm white for 180+
+            intellectColor = COLOR_FOREST_GREEN; // deep green for 180+
         }
 
         String iqDisplay = classifier.isGiftedProtocol()

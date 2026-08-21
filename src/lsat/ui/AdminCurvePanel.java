@@ -38,19 +38,19 @@ public class AdminCurvePanel extends JPanel {
         this.valueLabels = new JLabel[MoralCurveFilter.NUM_POINTS];
 
         setLayout(new BorderLayout(10, 10));
-        setBackground(new Color(34, 40, 49));
+        setBackground(new Color(255, 255, 255));
         setBorder(new EmptyBorder(20, 30, 20, 30));
 
         // Header
         JLabel header = new JLabel("Admin: Moral Curve Adjustment");
         header.setFont(new Font("SansSerif", Font.BOLD, 22));
-        header.setForeground(Color.WHITE);
+        header.setForeground(new Color(15, 83, 25));
         header.setHorizontalAlignment(SwingConstants.CENTER);
         header.setBorder(new EmptyBorder(0, 0, 5, 0));
 
         JLabel subheader = new JLabel("Adjust the 10 control points of the scoring distribution (modulus filter)");
         subheader.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        subheader.setForeground(new Color(160, 160, 160));
+        subheader.setForeground(new Color(82, 81, 80));
         subheader.setHorizontalAlignment(SwingConstants.CENTER);
 
         JPanel headerPanel = new JPanel();
@@ -108,21 +108,21 @@ public class AdminCurvePanel extends JPanel {
         // Label
         JLabel label = new JLabel(MoralCurveFilter.POINT_LABELS[index]);
         label.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        label.setForeground(new Color(200, 200, 200));
+        label.setForeground(new Color(64, 63, 62));
         label.setPreferredSize(new Dimension(130, 25));
 
         // Slider: 0 to 200 (represents 0.00 to 2.00)
         int initialValue = (int) (curveFilter.getWeight(index) * 100);
         JSlider slider = new JSlider(0, 200, initialValue);
         slider.setOpaque(false);
-        slider.setForeground(new Color(0, 200, 180));
+        slider.setForeground(new Color(54, 135, 39));
         slider.setPreferredSize(new Dimension(300, 25));
         sliders[index] = slider;
 
         // Value label
         JLabel valLabel = new JLabel(String.format("%.2f", curveFilter.getWeight(index)));
         valLabel.setFont(new Font("Monospaced", Font.BOLD, 12));
-        valLabel.setForeground(new Color(0, 200, 180));
+        valLabel.setForeground(new Color(54, 135, 39));
         valLabel.setPreferredSize(new Dimension(45, 25));
         valLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         valueLabels[index] = valLabel;
@@ -148,8 +148,8 @@ public class AdminCurvePanel extends JPanel {
 
         JButton btnReset = new JButton("Reset to Normal Distribution");
         btnReset.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btnReset.setBackground(new Color(57, 62, 70));
-        btnReset.setForeground(Color.WHITE);
+        btnReset.setBackground(new Color(240, 240, 240));
+        btnReset.setForeground(new Color(64, 63, 62));
         btnReset.setFocusPainted(false);
         btnReset.setBorderPainted(false);
         btnReset.setOpaque(true);
@@ -162,8 +162,8 @@ public class AdminCurvePanel extends JPanel {
 
         JButton btnFlat = new JButton("Flat (All Equal)");
         btnFlat.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btnFlat.setBackground(new Color(57, 62, 70));
-        btnFlat.setForeground(Color.WHITE);
+        btnFlat.setBackground(new Color(240, 240, 240));
+        btnFlat.setForeground(new Color(64, 63, 62));
         btnFlat.setFocusPainted(false);
         btnFlat.setBorderPainted(false);
         btnFlat.setOpaque(true);
@@ -178,7 +178,7 @@ public class AdminCurvePanel extends JPanel {
 
         JButton btnApply = new JButton("Apply & Continue →");
         btnApply.setFont(new Font("SansSerif", Font.BOLD, 14));
-        btnApply.setBackground(new Color(0, 150, 136));
+        btnApply.setBackground(new Color(54, 135, 39));
         btnApply.setForeground(Color.WHITE);
         btnApply.setFocusPainted(false);
         btnApply.setBorderPainted(false);
@@ -188,7 +188,7 @@ public class AdminCurvePanel extends JPanel {
 
         JButton btnCancel = new JButton("← Cancel");
         btnCancel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        btnCancel.setForeground(new Color(180, 180, 180));
+        btnCancel.setForeground(new Color(82, 81, 80));
         btnCancel.setContentAreaFilled(false);
         btnCancel.setBorderPainted(false);
         btnCancel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
