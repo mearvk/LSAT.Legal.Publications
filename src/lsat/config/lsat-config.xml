@@ -53,6 +53,8 @@
 
     <!-- Display/UI settings -->
     <display>
+        <!-- Launch mode: gui or terminal -->
+        <mode>gui</mode>
         <window-width>950</window-width>
         <window-height>700</window-height>
         <!-- Show live IQ estimator during test -->

@@ -34,7 +34,7 @@ public class Main {
         } catch (Exception ignored) {
         }
 
-        // Check if running in headless mode or forced terminal via args
+        // CLI flags override config
         boolean forceTerminal = false;
         boolean forceGui = false;
         for (String arg : args) {
@@ -42,37 +42,22 @@ public class Main {
             if ("--gui".equals(arg) || "-g".equals(arg)) forceGui = true;
         }
 
+        // Determine mode: CLI flags take precedence, then config, default is GUI
+        boolean useTerminal;
         if (forceTerminal) {
-            System.out.println("Starting in Terminal mode (--terminal flag).");
+            useTerminal = true;
+        } else if (forceGui) {
+            useTerminal = false;
+        } else {
+            useTerminal = "terminal".equalsIgnoreCase(config.launchMode);
+        }
+
+        if (useTerminal) {
+            System.out.println("Starting in Terminal mode.");
             applyConfigToTerminal(config);
             TerminalRunner.run();
-        } else if (forceGui) {
-            launchGUI(config);
         } else {
-            // Show mode selection popup
-            SwingUtilities.invokeLater(() -> {
-                String[] options = {"GUI (Default)", "Terminal"};
-                int choice = JOptionPane.showOptionDialog(
-                        null,
-                        buildStartMessage(config),
-                        "LSAT Moral Assessment — Mode Selection",
-                        JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-                );
-
-                if (choice == 1) {
-                    new Thread(() -> {
-                        applyConfigToTerminal(config);
-                        TerminalRunner.run();
-                        System.exit(0);
-                    }).start();
-                } else {
-                    launchGUI(config);
-                }
-            });
+            launchGUI(config);
         }
     }
 
@@ -92,20 +77,6 @@ public class Main {
         System.out.println("Config loaded: language=" + config.language
                 + ", difficulty=" + config.difficulty
                 + ", font=" + config.fontFamily + "/" + config.fontSize);
-    }
-
-    private static String buildStartMessage(AppConfig config) {
-        return String.format(
-                "LSAT Moral Assessment\n\n"
-                + "Configuration:\n"
-                + "  Language: %s\n"
-                + "  Difficulty: %s\n"
-                + "  Font: %s %dpt\n"
-                + "  Color: %s\n\n"
-                + "How would you like to administer the test?",
-                config.language, config.difficulty,
-                config.fontFamily, config.fontSize,
-                config.fontColor);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -174,6 +145,7 @@ public class Main {
             NodeList displayNodes = root.getElementsByTagName("display");
             if (displayNodes.getLength() > 0) {
                 Element display = (Element) displayNodes.item(0);
+                config.launchMode = getChildText(display, "mode", config.launchMode);
                 config.windowWidth = getChildInt(display, "window-width", config.windowWidth);
                 config.windowHeight = getChildInt(display, "window-height", config.windowHeight);
                 config.showLiveIQ = getChildBoolean(display, "show-live-iq", config.showLiveIQ);
@@ -251,6 +223,8 @@ public class Main {
                 + "\n"
                 + "    <!-- Display/UI settings -->\n"
                 + "    <display>\n"
+                + "        <!-- Launch mode: gui or terminal -->\n"
+                + "        <mode>gui</mode>\n"
                 + "        <window-width>950</window-width>\n"
                 + "        <window-height>700</window-height>\n"
                 + "        <!-- Show live IQ estimator during test -->\n"
@@ -341,6 +315,7 @@ public class Main {
         public double iqWeight = 0.40;
 
         // Display
+        public String launchMode = "gui"; // "gui" or "terminal"
         public int windowWidth = 950;
         public int windowHeight = 700;
         public boolean showLiveIQ = true;

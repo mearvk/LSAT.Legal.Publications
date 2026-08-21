@@ -312,6 +312,9 @@ public class TestGUI extends JFrame {
         config = new TestConfig();
         langPack = LanguagePack.load(config.getLanguage());
 
+        // ─── Menu Bar: Mayors & Sheriffs ─────────────────────────────────────
+        setJMenuBar(createMenuBar());
+
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
@@ -359,6 +362,22 @@ public class TestGUI extends JFrame {
             }
         }
         return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Menu Bar — Mayors & Sheriffs
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu oneMenu = new JMenu("One");
+        JMenuItem voteItem = new JMenuItem("Vote");
+        oneMenu.add(voteItem);
+
+        menuBar.add(oneMenu);
+
+        return menuBar;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

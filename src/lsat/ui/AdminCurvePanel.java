@@ -90,7 +90,7 @@ public class AdminCurvePanel extends JPanel {
     }
 
     private JPanel createSlidersPanel() {
-        JPanel panel = new JPanel(new GridLayout(MoralCurveFilter.NUM_POINTS, 1, 0, 2));
+        JPanel panel = new JPanel(new GridLayout(MoralCurveFilter.NUM_POINTS, 1, 0, 12));
         panel.setOpaque(false);
 
         for (int i = 0; i < MoralCurveFilter.NUM_POINTS; i++) {
@@ -101,29 +101,29 @@ public class AdminCurvePanel extends JPanel {
     }
 
     private JPanel createSliderRow(int index) {
-        JPanel row = new JPanel(new BorderLayout(10, 0));
+        JPanel row = new JPanel(new BorderLayout(14, 0));
         row.setOpaque(false);
-        row.setBorder(new EmptyBorder(2, 5, 2, 5));
+        row.setBorder(new EmptyBorder(6, 12, 6, 12));
 
         // Label
         JLabel label = new JLabel(MoralCurveFilter.POINT_LABELS[index]);
-        label.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        label.setFont(new Font("SansSerif", Font.PLAIN, 13));
         label.setForeground(new Color(64, 63, 62));
-        label.setPreferredSize(new Dimension(130, 25));
+        label.setPreferredSize(new Dimension(172, 36));
 
         // Slider: 0 to 200 (represents 0.00 to 2.00)
         int initialValue = (int) (curveFilter.getWeight(index) * 100);
         JSlider slider = new JSlider(0, 200, initialValue);
         slider.setOpaque(false);
         slider.setForeground(new Color(54, 135, 39));
-        slider.setPreferredSize(new Dimension(300, 25));
+        slider.setPreferredSize(new Dimension(300, 36));
         sliders[index] = slider;
 
         // Value label
         JLabel valLabel = new JLabel(String.format("%.2f", curveFilter.getWeight(index)));
-        valLabel.setFont(new Font("Monospaced", Font.BOLD, 12));
+        valLabel.setFont(new Font("Monospaced", Font.BOLD, 13));
         valLabel.setForeground(new Color(54, 135, 39));
-        valLabel.setPreferredSize(new Dimension(45, 25));
+        valLabel.setPreferredSize(new Dimension(72, 36));
         valLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         valueLabels[index] = valLabel;
 
