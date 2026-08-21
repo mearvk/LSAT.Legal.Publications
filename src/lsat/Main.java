@@ -1,6 +1,7 @@
 package lsat;
 
 import lsat.ui.TestGUI;
+import lsat.ui.SplashScreen;
 import lsat.ui.TerminalRunner;
 
 import javax.swing.*;
@@ -77,8 +78,13 @@ public class Main {
 
     private static void launchGUI(AppConfig config) {
         SwingUtilities.invokeLater(() -> {
-            TestGUI gui = new TestGUI();
-            gui.setVisible(true);
+            SplashScreen splash = new SplashScreen();
+            splash.showSplash(() -> {
+                SwingUtilities.invokeLater(() -> {
+                    TestGUI gui = new TestGUI();
+                    gui.setVisible(true);
+                });
+            });
         });
     }
 

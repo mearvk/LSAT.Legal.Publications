@@ -384,8 +384,8 @@ public class TestGUI extends JFrame {
         try {
             java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(new File("images/logo-orb.png"));
             if (original != null) {
-                // Scale preserving aspect ratio, height matches title line (~50px)
-                int targetHeight = 50;
+                // Scale preserving aspect ratio, height matches title line (~64px)
+                int targetHeight = 64;
                 int targetWidth = (int) ((double) original.getWidth() / original.getHeight() * targetHeight);
                 Image scaled = original.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
                 logoLabel.setIcon(new ImageIcon(scaled));
@@ -422,8 +422,6 @@ public class TestGUI extends JFrame {
         titlePanel.add(subtitle);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 20)));
         titlePanel.add(desc);
-        titlePanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        titlePanel.add(owner);
         titlePanel.add(Box.createVerticalGlue());
 
         // Buttons — primary green CTA, secondary grey, same size, Francois One italic
@@ -449,6 +447,9 @@ public class TestGUI extends JFrame {
         btnPanel.add(btnStart);
         btnPanel.add(Box.createRigidArea(new Dimension(0, 12)));
         btnPanel.add(btnAdmin);
+        btnPanel.add(Box.createRigidArea(new Dimension(0, 16)));
+        owner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnPanel.add(owner);
 
         panel.add(titlePanel, BorderLayout.CENTER);
         panel.add(btnPanel, BorderLayout.SOUTH);
