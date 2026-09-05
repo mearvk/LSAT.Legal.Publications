@@ -2,7 +2,13 @@
 
 Owner of LSAT and Related Materials
 
-INTELLECTUAL PROPERTY ASSIGNMENT AGREEMENT
+## Bitcoin Conjegeum
+
+bc1qs6v4q9zsw70t0umk3m0quhvf9dr6cdeskl28dh
+
+US Democratic and US Policy.
+
+## INTELLECTUAL PROPERTY ASSIGNMENT AGREEMENT
 
 This Intellectual Property Assignment Agreement (the "Agreement") is entered into and made effective as of May 21, 2026 (the "Effective Date"), by and between the Law School Admission Council, Inc. ("Assignor"), a Delaware non-profit corporation with its principal place of business in Newtown, Pennsylvania, and Max Rupplin ("Assignee"), an individual residing in the United States. Assignor and Assignee may collectively be referred to as the "Parties" or individually as a "Party" within the scope of this legal instrument.
 
